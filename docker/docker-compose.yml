@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  aws-emulator:
+    image: floci/floci:latest
+    container_name: aws_local_emulator
+    ports:
+      - "4566:4566"        # Puerto unificado para APIs de AWS
+    volumes:
+      # Crítico en Mac para que Floci pueda crear contenedores hijos (ECS/Lambda/Redis)
+      - /var/run/docker.sock:/var/run/docker.sock 
+      - floci_data:/root/.floci
+    environment:
+      - PERSISTENCE=1      # Guarda el estado de DynamoDB/S3 al apagar el contenedor
+      - DEFAULT_REGION=us-east-1
+    restart: unless-stopped
+
+volumes:
+  floci_data:

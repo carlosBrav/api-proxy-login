@@ -1,0 +1,28 @@
+{
+  "name": "lambda-ingest-lobby",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Lambda EventBridge → getLobby Calímaco → DynamoDB col_maestro_transversal_juegos",
+  "main": "dist/handler.js",
+  "scripts": {
+    "build": "npm run build:lambda",
+    "build:tsc": "tsc",
+    "build:lambda": "esbuild src/handler.ts --bundle --platform=node --target=node20 --outfile=dist/handler.js --format=cjs",
+    "typecheck": "tsc --noEmit",
+    "invoke:local": "DOTENV_CONFIG_PATH=.env.local ts-node -r dotenv/config src/handler.ts",
+    "invoke:local:blackjack": "INGEST_LOBBY=liveblackjack DOTENV_CONFIG_PATH=.env.local ts-node -r dotenv/config src/handler.ts",
+    "invoke:local:all": "DOTENV_CONFIG_PATH=.env.local ts-node -r dotenv/config src/handler.ts",
+    "test:getLobby": "DOTENV_CONFIG_PATH=.env.local ts-node -r dotenv/config scripts/test-getLobby.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.826.0",
+    "@aws-sdk/lib-dynamodb": "^3.826.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.2",
+    "dotenv": "^16.4.5",
+    "esbuild": "^0.25.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  }
+}
