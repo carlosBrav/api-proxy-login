@@ -1,0 +1,183 @@
+openapi: 3.1.0
+info:
+  title: API BFF Tiempo Real - Lobby
+  version: 1.0.0
+  description: API para la gestión de conexiones WebSocket y actualizaciones en tiempo real del lobby para Atlantic City.
+servers:
+  - url: https://api-altenar.acity.com.pe
+    description: API REST de Producción
+  - url: wss://ws-api-altenar.acity.com.pe
+    description: API WebSocket de Producción
+  - url: http://localhost:5001
+    description: API Mock Local
+
+paths:
+  /ws/guest-session:
+    post:
+      summary: Inicializar sesión WebSocket para invitado (Guest)
+      description: Genera un nuevo ID de invitado o recupera uno existente, y retorna un JWT firmado para conectarse al WebSocket.
+      operationId: crearSesionInvitado
+      requestBody:
+        description: Opcional. Se envía si el invitado ya tiene un ID previo (guardado en localStorage, por ejemplo) y desea reconectarse manteniendo su sesión.
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                guestId:
+                  type: string
+                  description: ID del invitado existente para reconexión.
+                  example: "us-east-1:mock-guest-12345"
+      responses:
+        '200':
+          description: Sesión de invitado creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaSesionInvitado'
+        '500':
+          description: Error Interno del Servidor
+
+  /ws/session:
+    post:
+      summary: Inicializar sesión WebSocket para usuario autenticado
+      description: Intercambia un IdToken válido de Cognito por un JWT de WebSocket. No requiere body, la identidad se extrae del token Bearer.
+      operationId: crearSesionUsuario
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Sesión de usuario creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaSesionUsuario'
+        '401':
+          description: No Autorizado - IdToken inválido, expirado o ausente
+        '500':
+          description: Error Interno del Servidor
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: IdToken de Cognito del usuario logueado
+
+  schemas:
+    RespuestaSesionInvitado:
+      type: object
+      required:
+        - guestId
+        - wsUrl
+        - wsToken
+        - expiresIn
+      properties:
+        guestId:
+          type: string
+          description: El ID único de identidad generado para el invitado. El frontend debe guardarlo para futuras reconexiones.
+          example: "us-east-1:mock-guest-12345"
+        wsUrl:
+          type: string
+          format: uri
+          description: La URL del WebSocket al cual conectarse.
+          example: "wss://ws-api-altenar.acity.com.pe/prod"
+        wsToken:
+          type: string
+          description: El JWT de corta duración requerido para abrir la conexión WebSocket.
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        expiresIn:
+          type: integer
+          description: Tiempo de expiración del token en segundos.
+          example: 3600
+
+    RespuestaSesionUsuario:
+      type: object
+      required:
+        - wsUrl
+        - wsToken
+        - expiresIn
+      properties:
+        wsUrl:
+          type: string
+          format: uri
+          description: La URL del WebSocket al cual conectarse.
+          example: "wss://ws-api-altenar.acity.com.pe/prod"
+        wsToken:
+          type: string
+          description: El JWT de corta duración requerido para abrir la conexión WebSocket.
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        expiresIn:
+          type: integer
+          description: Tiempo de expiración del token en segundos.
+          example: 3600
+
+    ParcheMesaLobby:
+      type: object
+      required:
+        - external_id
+        - realtime
+      properties:
+        external_id:
+          type: string
+          description: El ID único de la mesa proveniente del catálogo.
+        idProveedor:
+          type: integer
+          description: El ID del proveedor (requerido en producción).
+        realtime:
+          type: object
+          required:
+            - updatedAt
+          properties:
+            minBet:
+              type: number
+              description: Apuesta mínima.
+            currency:
+              type: string
+              description: Moneda de la mesa.
+            availableSeats:
+              type: integer
+              description: Asientos disponibles.
+            betOptions:
+              type: array
+              items:
+                type: number
+              description: Opciones de apuesta.
+            isAvailable:
+              type: boolean
+              description: Indica si la mesa está disponible.
+            dealerLanguage:
+              type: string
+              description: Idioma del crupier.
+            updatedAt:
+              type: string
+              format: date-time
+              description: Fecha y hora de la última actualización.
+
+    MensajeParcheTiempoReal:
+      type: object
+      required:
+        - type
+        - version
+        - serverTime
+        - updates
+      properties:
+        type:
+          type: string
+          enum: [patch]
+          description: Tipo de mensaje (siempre 'patch' para actualizaciones).
+        version:
+          type: string
+          format: date-time
+          description: Versión del parche.
+        serverTime:
+          type: string
+          format: date-time
+          description: Hora del servidor al emitir el mensaje.
+        updates:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParcheMesaLobby'
+          description: Lista de mesas actualizadas.

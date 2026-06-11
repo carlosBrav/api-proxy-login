@@ -1,0 +1,4 @@
+# Lambda Layer Dependencies para Python Lambdas
+# Usado por: verify-auth-challenge, pre-token-generation
+
+redis==7.1.0

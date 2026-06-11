@@ -1,0 +1,9 @@
+provider "aws" {
+  region = var.region
+  # profile = "acity" # activar solo para desarrollo (configurar un profile acity)
+  default_tags {
+    tags = var.tags
+  }
+}
+
+provider "archive" {}

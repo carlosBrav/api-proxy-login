@@ -1,0 +1,50 @@
+2026-05-29T03:17:02.097Z  INIT_START Runtime Version: nodejs:18.v106	Runtime Version ARN: arn:aws:lambda:us-west-2::runtime:e5289cf0d55ca23c93922a229e23ce24b41548c2f8b180f1fce62a456ecec805
+
+2026-05-29T03:17:02.592Z  START RequestId: 4fa9cdd7-6b85-4210-ae4b-65ecdb4a6700 Version: $LATEST
+
+2026-05-29T03:17:02.595Z  2026-05-29T03:17:02.595Z	4fa9cdd7-6b85-4210-ae4b-65ecdb4a6700	INFO	[renew] Event received
+
+2026-05-29T03:17:02.596Z  2026-05-29T03:17:02.596Z	4fa9cdd7-6b85-4210-ae4b-65ecdb4a6700	INFO	[renew] Origin: http://localhost:3014
+
+2026-05-29T03:17:02.596Z  2026-05-29T03:17:02.596Z	4fa9cdd7-6b85-4210-ae4b-65ecdb4a6700	INFO	[renew] STEP 1/7 — Extract Bearer token
+
+2026-05-29T03:17:02.596Z  2026-05-29T03:17:02.596Z	4fa9cdd7-6b85-4210-ae4b-65ecdb4a6700	INFO	[renew] STEP 1 OK — bearer extracted, len=1721
+
+2026-05-29T03:17:02.596Z  2026-05-29T03:17:02.596Z	4fa9cdd7-6b85-4210-ae4b-65ecdb4a6700	INFO	[renew] STEP 2/7 — Verify JWT signature (ignoring exp)
+
+2026-05-29T03:17:02.596Z  2026-05-29T03:17:02.596Z	4fa9cdd7-6b85-4210-ae4b-65ecdb4a6700	INFO	[renew] fetching JWKs from https://cognito-idp.us-west-2.amazonaws.com/us-west-2_LbMgqVzF5/.well-known/jwks.json
+
+2026-05-29T03:17:02.891Z  2026-05-29T03:17:02.891Z	4fa9cdd7-6b85-4210-ae4b-65ecdb4a6700	INFO	[renew] STEP 2 OK {
+  cognito_username: 'Testcalimaco10',
+  has_refresh_token_col: true,
+  has_device_id: true,
+  device_id: 'a88ac693-d113-4089-8f56-62745a54df22'
+}
+
+2026-05-29T03:17:02.894Z  2026-05-29T03:17:02.894Z	4fa9cdd7-6b85-4210-ae4b-65ecdb4a6700	INFO	[renew] STEP 3/7 — Decrypt refresh_token via FN_CRYPTO
+
+2026-05-29T03:17:02.894Z  2026-05-29T03:17:02.894Z	4fa9cdd7-6b85-4210-ae4b-65ecdb4a6700	INFO	[invokeLambda] → lambda-col-securizacion-tokenizacion-crypto-altenar { mode: 'decrypt', payloadLen: 272 }
+
+2026-05-29T03:17:03.480Z  2026-05-29T03:17:03.480Z	4fa9cdd7-6b85-4210-ae4b-65ecdb4a6700	INFO	[invokeLambda] ← lambda-col-securizacion-tokenizacion-crypto-altenar OK { durationMs: 586, statusCode: 200, body_len: 128 }
+
+2026-05-29T03:17:03.480Z  2026-05-29T03:17:03.480Z	4fa9cdd7-6b85-4210-ae4b-65ecdb4a6700	INFO	[renew] STEP 3 OK — refresh_token decrypted, len=128
+
+2026-05-29T03:17:03.480Z  2026-05-29T03:17:03.480Z	4fa9cdd7-6b85-4210-ae4b-65ecdb4a6700	INFO	[renew] STEP 4/7 — Calimaco /auth/token/refresh
+
+2026-05-29T03:17:03.480Z  2026-05-29T03:17:03.480Z	4fa9cdd7-6b85-4210-ae4b-65ecdb4a6700	INFO	[renew] Calling Calimaco token refresh API
+
+2026-05-29T03:17:03.669Z  2026-05-29T03:17:03.669Z	4fa9cdd7-6b85-4210-ae4b-65ecdb4a6700	INFO	[renew] Calimaco refresh response: 200 {"type":"tokenRefresh","event":"loginOk","ip":"34.223.100.165","result":"OK","user":{"alias":"Testcalimaco10","user":3105851,"email":"jisla@acity.com.pe","status":"REGISTERED","db":1,"country":"US","lastLogin":"2026-05-29 02:40:28","company":"ACP","national_id":"00110011","ip_login_errors":0,"otp":null,"facebook_id":null,"google_id":null,"apple_id":null,"client_device":"D","session":"1-892fd98ebbfc80a1bd951b2d1727dbf9dcdbf48baed008e06f3342a23c343b6c","groups":[3,5,8,3040,3041,3065,3066]},"data":{"db":1,"user":3105851,"remember_me":{"device_id":"a88ac693-d113-4089-8f56-62745a54df22","refresh_token":"91cc0a07b86bf6d53b193d00ce9f3e905ea89f304ef37ba420391e78e90f1518593c44aa032b95c349e2beee91ce29b43f4b4d5f8755fe211d2a357602b09875","expires_at":"2026-06-28T03:17:03.649Z"}}}
+
+2026-05-29T03:17:03.669Z  2026-05-29T03:17:03.669Z	4fa9cdd7-6b85-4210-ae4b-65ecdb4a6700	INFO	[renew] Calimaco refresh response: 200 {"type":"tokenRefresh","event":"loginOk","ip":"34.223.100.165","result":"OK","user":{"alias":"Testcalimaco10","user":3105851,"email":"jisla@acity.com.pe","status":"REGISTERED","db":1,"country":"US","lastLogin":"2026-05-29 02:40:28","company":"ACP","national_id":"00110011","ip_login_errors":0,"otp":null,"facebook_id":null,"google_id":null,"apple_id":null,"client_device":"D","session":"1-892fd98ebbfc80a1bd951b2d1727dbf9dcdbf48baed008e06f3342a23c343b6c","groups":[3,5,8,3040,3041,3065,3066]},"data":{"db":1,"user":3105851,"remember_me":{"device_id":"a88ac693-d113-4089-8f56-62745a54df22","refresh_token":"91cc0a07b86bf6d53b193d00ce9f3e905ea89f304ef37ba420391e78e90f1518593c44aa032b95c349e2beee91ce29b43f4b4d5f8755fe211d2a357602b09875","expires_at":"2026-06-28T03:17:03.649Z"}}}
+
+2026-05-29T03:17:03.669Z  2026-05-29T03:17:03.669Z	4fa9cdd7-6b85-4210-ae4b-65ecdb4a6700	ERROR	[renew] UNHANDLED ERROR {
+  name: 'ReferenceError',
+  message: "Cannot access 'newDeviceId' before initialization",
+  stack: "ReferenceError: Cannot access 'newDeviceId' before initialization\n" +
+    '    at Runtime.lambda_handler [as handler] (file:///var/task/renew-refresh-session.mjs:439:28)\n' +
+    '    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)'
+}
+
+2026-05-29T03:17:03.673Z  END RequestId: 4fa9cdd7-6b85-4210-ae4b-65ecdb4a6700
+
+2026-05-29T03:17:03.673Z  REPORT RequestId: 4fa9cdd7-6b85-4210-ae4b-65ecdb4a6700	Duration: 1080.45 ms	Billed Duration: 1572 ms	Memory Size: 1024 MB	Max Memory Used: 138 MB	Init Duration: 490.86 ms	

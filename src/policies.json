@@ -1,0 +1,203 @@
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Sid": "AllowVpc",
+			"Effect": "Allow",
+			"Action": [
+				"ec2:AuthorizeSecurityGroupIngress",
+				"ec2:AssociateRouteTable",
+				"ec2:AuthorizeSecurityGroupEgress",
+				"ec2:CreateVpc",
+				"ec2:CreateTags",
+				"ec2:CreateSecurityGroup",
+				"ec2:CreateRouteTable",
+				"ec2:CreateSubnet",
+				"ec2:CreateVpcEndpoint",
+				"ec2:DescribeVpcs",
+				"ec2:DescribeVpcAttribute",
+				"ec2:DescribeSecurityGroups",
+				"ec2:DescribeSecurityGroupRules",
+				"ec2:DescribePrefixLists",
+				"ec2:DescribeRouteTables",
+				"ec2:DescribeVpcEndpoints",
+				"ec2:DescribeSubnets",
+				"ec2:DescribeNetworkInterfaces",
+				"ec2:DisassociateRouteTable",
+				"ec2:ModifyVpcAttribute",
+				"ec2:DeleteRouteTable",
+				"ec2:DeleteSubnet",
+				"ec2:DeleteSecurityGroup",
+				"ec2:DeleteVpcEndpoints",
+				"ec2:DeleteVpc",
+				"ec2:RevokeSecurityGroupEgress",
+				"ec2:RevokeSecurityGroupIngress"
+			],
+			"Resource": "*"
+		},
+		{
+			"Effect": "Allow",
+			"Action": "ec2:DeleteNetworkInterface",
+			"Resource": "arn:aws:ec2:us-east-1:624463320100:network-interface/*"
+		},
+		{
+			"Sid": "AllowWebACL",
+			"Effect": "Allow",
+			"Action": [
+				"wafv2:CreateWebACL",
+				"wafv2:TagResource",
+				"wafv2:GetWebACL",
+				"wafv2:ListTagsForResource",
+				"wafv2:DeleteWebACL",
+				"wafv2:AssociateWebACL"
+			],
+			"Resource": "*"
+		},
+		{
+			"Effect": "Allow",
+			"Action": "wafv2:GetWebACLForResource",
+			"Resource": "arn:aws:wafv2:us-east-1:624463320100:regional/webacl/*/*"
+		},
+		{
+			"Sid": "AllowAllApiGatewayActions",
+			"Effect": "Allow",
+			"Action": [
+				"apigateway:GET",
+				"apigateway:PUT",
+				"apigateway:DELETE",
+				"apigateway:PATCH"
+			],
+			"Resource": [
+				"arn:aws:apigateway:us-east-1::/restapis/*",
+				"arn:aws:apigateway:us-east-1::/tags/*"
+			]
+		},
+		{
+			"Effect": "Allow",
+			"Action": "apigateway:POST",
+			"Resource": [
+				"arn:aws:apigateway:us-east-1::/restapis",
+				"arn:aws:apigateway:us-east-1::/restapis/*/resources/*",
+				"arn:aws:apigateway:us-east-1::/restapis/*/authorizers",
+				"arn:aws:apigateway:us-east-1::/restapis/*/deployments",
+				"arn:aws:apigateway:us-east-1::/restapis/*/stages"
+			]
+		},
+		{
+			"Effect": "Allow",
+			"Action": "apigateway:SetWebACL",
+			"Resource": "arn:aws:apigateway:us-east-1::/restapis/*/stages/*"
+		},
+		{
+			"Sid": "AllowSpecificRoleForLambda",
+			"Effect": "Allow",
+			"Action": [
+				"iam:CreateRole",
+				"iam:CreatePolicy",
+				"iam:PutRolePolicy",
+				"iam:AttachRolePolicy",
+				"iam:DeletePolicy",
+				"iam:TagRole",
+				"iam:TagPolicy",
+				"iam:GetRole",
+				"iam:GetPolicy",
+				"iam:GetPolicyVersion",
+				"iam:ListRolePolicies",
+				"iam:ListAttachedRolePolicies",
+				"iam:ListPolicyVersions",
+				"iam:ListInstanceProfilesForRole",
+				"iam:DetachRolePolicy",
+				"iam:DeleteRole",
+				"iam:CreateServiceLinkedRole",
+				"iam:GetRolePolicy",
+				"iam:CreatePolicyVersion"
+			],
+			"Resource": "*"
+		},
+		{
+			"Effect": "Allow",
+			"Action": "iam:PassRole",
+			"Resource": "*",
+			"Condition": {
+				"StringEquals": {
+					"iam:PassedToService": "lambda.amazonaws.com"
+				}
+			}
+		},
+		{
+			"Sid": "AllowLambdaFunction",
+			"Effect": "Allow",
+			"Action": [
+				"lambda:CreateFunction",
+				"lambda:TagResource",
+				"lambda:GetFunction",
+				"lambda:ListVersionsByFunction",
+				"lambda:GetFunctionCodeSigningConfig",
+				"lambda:DeleteFunction",
+				"lambda:AddPermission",
+				"lambda:GetPolicy",
+				"lambda:RemovePermission",
+				"lambda:CreateAlias",
+				"lambda:GetAlias",
+				"lambda:DeleteAlias",
+				"lambda:UpdateAlias",
+				"lambda:PutProvisionedConcurrencyConfig",
+				"lambda:UpdateFunctionConfiguration",
+				"lambda:UpdateFunctionCode",
+				"lambda:PublishVersion",
+				"lambda:GetProvisionedConcurrencyConfig",
+				"lambda:DeleteProvisionedConcurrencyConfig",
+				"lambda:GetFunctionConfiguration"
+			],
+			"Resource": "*"
+		},
+		{
+			"Sid": "AllowCacheSubnetGroup",
+			"Effect": "Allow",
+			"Action": [
+				"elasticache:CreateCacheSubnetGroup",
+				"elasticache:CreateCacheCluster",
+				"elasticache:AddTagsToResource",
+				"elasticache:DescribeCacheSubnetGroups",
+				"elasticache:ListTagsForResource",
+				"elasticache:DeleteCacheSubnetGroup",
+				"elasticache:DeleteCacheCluster",
+				"elasticache:DescribeCacheClusters"
+			],
+			"Resource": "*"
+		},
+		{
+			"Effect": "Allow",
+			"Action": [
+				"logs:CreateLogGroup",
+				"logs:CreateLogStream",
+				"logs:PutLogEvents",
+				"logs:TagResource",
+				"logs:PutRetentionPolicy",
+				"logs:DescribeLogGroups",
+				"logs:ListTagsForResource",
+				"logs:DeleteLogGroup"
+			],
+			"Resource": "*"
+		},
+		{
+			"Effect": "Allow",
+			"Action": [
+				"cognito-idp:AdminGetUser",
+				"cognito-idp:AdminCreateUser",
+				"cognito-idp:AdminSetUserPassword",
+				"cognito-idp:CreateUserPool",
+				"cognito-idp:TagResource",
+				"cognito-idp:DescribeUserPool",
+				"cognito-idp:GetUserPoolMfaConfig",
+				"cognito-idp:CreateUserPoolClient",
+				"cognito-idp:GetUserPoolMfaConfig",
+				"cognito-idp:UpdateUserPool",
+				"cognito-idp:DescribeUserPoolClient",
+				"cognito-idp:DeleteUserPool",
+				"cognito-idp:DeleteUserPoolClient"
+			],
+			"Resource": "arn:aws:cognito-idp:us-east-1:624463320100:userpool/*"
+		}
+	]
+}

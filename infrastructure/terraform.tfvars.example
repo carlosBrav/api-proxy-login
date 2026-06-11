@@ -1,0 +1,15 @@
+region         = ""
+policy_version = "2012-10-17"
+bucket_name = ""
+pc_id              = ""
+subnet_private_1_id = ""
+subnet_private_2_id = ""
+tags = {
+  "environment"       = ""
+  "project"           = ""
+  "owner"             = ""
+  "vertical_business" = ""
+  "iac"               = ""
+  "iac_version"       = ""
+  "region"            = ""
+}

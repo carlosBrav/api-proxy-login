@@ -1,0 +1,3918 @@
+openapi: 3.0.4
+info:
+  title: Swagger Altenar-Calimaco API's
+  description: Endpoints para Alternar
+  termsOfService: https://swagger.io/terms/
+  contact:
+    email: apiteam@swagger.io
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+servers:
+  - description: SwaggerHub API Auto Mocking
+    url: https://app-altenar.acity.com.pe/
+security:
+  - bearerAuth: []
+paths:
+  /login:
+    post:
+      tags:
+        - auth
+      summary: User login
+      description: Allows you to log in with valid Atlantic City credentials
+      operationId: login
+      security: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Auth"
+        required: true
+      responses:
+        "200":
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  IdToken:
+                    type: string
+                    description: Token JWT de identificación.
+                  RefreshToken:
+                    type: string
+                    description: Token para refrescar la sesión.
+                  ExpiresIn:
+                    type: integer
+                    description: Tiempo en segundos antes de la expiración del token.
+                    example: 3600
+                  user:
+                    type: object
+                    properties:
+                      alias:
+                        type: string
+                        example: Testprueba90
+                      user:
+                        type: integer
+                        example: 389382
+                      email:
+                        type: string
+                        format: email
+                        example: sdjhduygsuad@gmail.com
+                      status:
+                        type: string
+                        example: REGISTERED
+                      db:
+                        type: integer
+                        example: 2
+                      country:
+                        type: string
+                        example: US
+                      lastLogin:
+                        type: string
+                        format: date-time
+                        example: 2025-07-17 20:58:04
+                      company:
+                        type: string
+                        example: ACP
+                      national_id:
+                        type: string
+                        example: "48494774"
+                      ip_login_errors:
+                        type: integer
+                        example: 0
+                      otp:
+                        type: string
+                        nullable: true
+                      facebook_id:
+                        type: string
+                        nullable: true
+                      google_id:
+                        type: string
+                        nullable: true
+                      client_device:
+                        type: string
+                        example: D
+                      groups:
+                        type: array
+                        items:
+                          type: integer
+                        example: [3, 5, 11, 20]
+                      currency:
+                        type: string
+                        example: PEN
+        "400":
+          description: Invalid or missing data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                missingParameters:
+                  summary: Parámetros faltantes
+                  value:
+                    message: "Completar los campos obligatorios"
+                invalidCredentials:
+                  summary: Credenciales incorrectas
+                  value:
+                    message: "Usuario o clave incorrecta"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Ocurrió un error inesperado
+
+  /logout:
+    post:
+      tags:
+        - auth
+      summary: Logout de usuario
+      description: Cierra la sesión del usuario autenticado
+      operationId: logout
+      responses:
+        "200":
+          description: Session closed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: ""
+                  event:
+                    type: string
+                    description: ""
+                  ip:
+                    type: string
+                    description: ""
+                  result:
+                    type: string
+                    description: ""
+                  user:
+                    type: object
+        "400":
+          description: Invalid or missing data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: No se encontró la sesión en el token
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Sin Autorización
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Ocurrió un error inesperado
+
+  /refresh-token:
+    post:
+      tags:
+        - auth
+      summary: Refresh token
+      description: Allows you to log in with valid Atlantic City credentials
+      operationId: refresh-token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                RefreshToken:
+                  type: string
+                  description: Token para refrescar la sesión.
+        required: true
+      responses:
+        "200":
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  IdToken:
+                    type: string
+                    description: Token JWT de identificación.
+        "400":
+          description: Invalid or missing data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                missingParameters:
+                  summary: Parámetros faltantes
+                  value:
+                    message: "Completar los campos obligatorios"
+                invalidRefreshToken:
+                  summary: Refresh Token inválido
+                  value:
+                    message: "El Refresh Token no es valido"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Sin Autorización
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Ocurrió un error inesperado
+
+  /forgot-password:
+    post:
+      tags:
+        - change-password
+      summary: Recover password
+      description: Send an email to recover the user's password
+      operationId: forgotPassword
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: TestStark09@gmail.com
+      responses:
+        "200":
+          description: Session closed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: ""
+                  company:
+                    type: string
+                    description: ""
+                  event:
+                    type: string
+                    description: ""
+                  ip:
+                    type: string
+                    description: ""
+                  result:
+                    type: string
+                    description: ""
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Completar los campos obligatorios
+
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Ocurrió un error inesperado
+        "504":
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Timeout - No response from server
+
+  /update-password:
+    patch:
+      tags:
+        - change-password
+      summary: Actualizar contraseña del usuario
+      description: Permite cambiar la contraseña del usuario autenticado enviando la contraseña antigua y la nueva
+      operationId: updatePassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - old_password
+                - new_password
+              properties:
+                old_password:
+                  type: string
+                  example: Testprueba90
+                new_password:
+                  type: string
+                  example: 01Testprueba90
+      responses:
+        "200":
+          description: Session closed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: ""
+                  company:
+                    type: string
+                    description: ""
+                  event:
+                    type: string
+                    description: ""
+                  ip:
+                    type: string
+                    description: ""
+                  result:
+                    type: string
+                    description: ""
+        "400":
+          description: Invalid or missing data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Completar los campos obligatorios
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Sin Autorización
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Ocurrió un error inesperado
+
+  /get-user-detail:
+    get:
+      tags:
+        - get-user-detail
+      summary: Obtener datos adicionales del usuario
+      description: Permite obtener la información detallada del usuario
+      operationId: getUserDetail
+      responses:
+        "200":
+          description: Valid Session successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserDetailsResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Sin Autorización
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Ocurrió un error inesperado
+
+  /data/user-accounts:
+    get:
+      tags:
+        - data
+      summary: Obtener los distintos tipos de cuentas de un usuario
+      description: Permite listar la información de las multiples cuentas de un usuario
+      operationId: getUserAccounts
+      responses:
+        "200":
+          description: Valid Session successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserAccountsResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Sin Autorización
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Ocurrió un error inesperado
+  
+  /data/get-user-active-promotions:
+    post:
+      tags:
+        - data
+      summary: Obtener promociones activas de un usuario
+      description: Retorna las promociones activas de un usuario autenticado.
+      operationId: getUserActivePromotions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                limits:
+                  type: string
+                  example: '{"init":0,"end":20}'
+                  description: Rango de resultados a devolver.
+                filter:
+                  type: string
+                  example: '{"op_date_init":"","op_date_end":"","promotion":""}'
+                  description: Filtros de búsqueda (fechas, promoción, etc).
+      responses:
+        "200":
+          description: Valid Session successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserActivePromotionsResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Sin Autorización
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Ocurrió un error inesperado
+
+  /data/get-user-pending-promotions:
+    post:
+      tags:
+        - data
+      summary: Obtener promociones pendientes del usuario
+      description: >
+        Devuelve el listado de promociones pendientes del usuario autenticado.  
+        Requiere autenticación mediante **Bearer Token**.
+      operationId: getUserPendingPromotions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                limits:
+                  type: string
+                  example: '{"init":0,"end":20}'
+                  description: Rango de resultados (inicio y fin).
+                filter:
+                  type: string
+                  example: '{"op_date_init":"","op_date_end":"","promotion":""}'
+                  description: Filtros opcionales (fechas y nombre de promoción).
+      responses:
+        "200":
+          description: Valid Session successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserPendingPromotionsResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Sin Autorización
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Ocurrió un error inesperado
+  
+  /data/claim-code-promotion:
+    post:
+      tags:
+        - data
+      summary: Reclamar código de promoción
+      description: Endpoint para que el usuario reclame un código de promoción válido.
+      operationId: claimCodePromotion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - code
+              properties:
+                code:
+                  type: string
+                  example: "ADTEST5PENF3###2hxvtp"
+      responses:
+        "200":
+          description: Valid Session successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClaimCodePromotionResponse"
+        "400":
+          description: Invalid or missing data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                missingParameters:
+                  summary: Parámetros faltantes
+                  value:
+                    message: "Completar los campos obligatorios"
+                invalidRefreshToken:
+                  summary: Código Invalido
+                  value:
+                    message: "El código ingresado no es válido"
+                codeAlreadyClaimed:
+                  summary: Código ya reclamado
+                  value:
+                    message: "El código ya ha sido reclamado"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Sin Autorización
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Ocurrió un error inesperado
+
+  /data/cancel-user-promotion:
+    post:
+      tags:
+        - data
+      summary: Cancelar promoción de usuario
+      description: Cancela una promoción de usuario enviando el código correspondiente.
+      operationId: cancelUserPromotion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: integer
+                  example: 3131312
+              required:
+                - code
+      responses:
+        "200":
+          description: Valid Session successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: 
+                    company:
+                      type: string
+                      example: ""
+                    event:
+                      type: string
+                      example: "cancelUserPromotion"
+                    ip:
+                      type: string
+                      example: "181.224.239.6"
+                    result:
+                      type: string
+                      example: "OK"
+                    type:
+                      type: string
+                      example: "cancelUserPromotion"
+        "400":
+          description: Invalid or missing data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                missingParameters:
+                  summary: Parámetros faltantes
+                  value:
+                    message: "Completar los campos obligatorios"
+                invalidRefreshToken:
+                  summary: Código Invalido
+                  value:
+                    message: "El código ingresado no es válido"
+        '401':
+          description: Error de autenticación/autorización
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Sin Autorización"
+        '500':
+          description: Error inesperado en el servidor
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Ocurrio un error inesperado"
+
+  /data/user-files:
+    get:
+      summary: Listar archivos de usuario
+      description: Retorna los archivos asociados al usuario autenticado.
+      operationId: getUserFiles
+      tags:
+        - data
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Archivos obtenidos exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    example: getUserFiles
+                  company:
+                    type: string
+                    example: ""
+                  event:
+                    type: string
+                    example: getUserFiles
+                  ip:
+                    type: string
+                    example: 35.94.210.51
+                  result:
+                    type: string
+                    example: OK
+                  files:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        result:
+                          type: string
+                          example: OK
+                        db:
+                          type: integer
+                          example: 2
+                        user:
+                          type: integer
+                          example: 410109
+                        file:
+                          type: integer
+                          example: 213808
+                        company:
+                          type: string
+                          example: ACP
+                        status:
+                          type: string
+                          example: APPROVED
+                        created_date:
+                          type: string
+                          format: date-time
+                          example: 2025-08-08 21:35:50
+                        type:
+                          type: string
+                          example: VERIFICATION
+                        sub_type:
+                          type: string
+                          nullable: true
+                          example: DNI
+                        side:
+                          type: string
+                          nullable: true
+                          example: FRONT
+                        expiration_date:
+                          type: string
+                          nullable: true
+                          example: 2030-04-28
+                        path:
+                          type: string
+                          example: ACP/410/410109/213734_dni frontal.jpeg
+                        comments:
+                          type: string
+                          example: "VALIDADO POR METAMAP\n08 ago, 2025 15:41\n..."
+                        extra:
+                          type: string
+                          nullable: true
+                          example: null
+                        reviewer:
+                          type: integer
+                          example: 112577
+                        review_date:
+                          type: string
+                          format: date-time
+                          example: 2025-08-08 21:05:26
+                        ip:
+                          type: string
+                          example: 181.224.239.6
+                        payment_account:
+                          type: integer
+                          nullable: true
+                          example: 162814
+        '401':
+          description: Token inválido o no proporcionado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Unauthorized"
+        '500':
+          description: Error inesperado en el servidor
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Ocurrió un error inesperado"
+
+  /data/user-personal-preferences:
+    get:
+      tags:
+        - data
+      summary: Listar todas las preferencias del usuario
+      description: >
+        Devuelve el listado de las preferencias seleccionadas por el usuario
+        Requiere autenticación mediante **Bearer Token**.
+      operationId: getUserPersonalPreferences
+      responses:
+        "200":
+          description: successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserPersonalPreferencesResponse"
+        "400":
+          description: Invalid or missing data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Completar los campos obligatorios
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Ocurrió un error inesperado
+  
+  /data/users-personal-preferences:
+    get:
+      tags:
+        - data
+      summary: Listar todas las preferencias
+      description: >
+        Devuelve un listado con todas las preferencias que el usuario puede seleccionar.
+      operationId: getUsersPersonalPreferences
+      responses:
+        "200":
+          description: successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UsersPersonalPreferencesResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Ocurrió un error inesperado
+  
+  /data/validate-session:
+    get:
+      tags:
+        - data
+      summary: válidar la sesión del usuario logueado
+      description: >
+        Devuelve un detalle del usuario siempre y cuando su sesión sea valida
+      operationId: validateSession
+      responses:
+        "200":
+          description: successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidateSessionResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Ocurrió un error inesperado
+
+  /data/Operations-history:
+    get:
+      tags:
+        - data
+      summary: Listar las operaciones del usuario
+      description: |
+        Este servicio obtiene el historial de operaciones de un usuario autenticado.
+        Los parámetros permiten filtrar por rango de fechas, estado y tipo de operación,
+        así como manejar paginación con `init` y `end`.
+        
+        Status:
+          - SUCCESS
+          - CANCELLED
+          - DENIED
+          - PROCESSED
+
+        Type: 
+          - MANUAL
+          - PAYOUT
+          - REDEEM
+          - DEPOSIT
+          - WINNING
+          - WAGER
+      operationId: getOperationsHistory
+      parameters:
+        - name: init
+          in: query
+          required: true
+          description: Especifica desde que posición tomara los registros de la colección
+          schema:
+            type: integer
+            example: 0
+        - name: end
+          in: query
+          required: true
+          description: Especifica hasta que posición tomara los registros de la colección
+          schema:
+            type: integer
+            example: 20
+        - name: op_date_init
+          in: query
+          required: true
+          description: Especifica desde que fecha tomara los registros (formato `YYYY-MM-DD HH:mm:ss`)
+          schema:
+            type: string
+            example: 2025-01-01 05:00:00
+        - name: op_date_end
+          in: query
+          required: true
+          description: Especifica hasta que fecha tomara los registros (formato `YYYY-MM-DD HH:mm:ss`)
+          schema:
+            type: string
+            example: 2025-10-12 23:59:59
+        - name: status
+          in: query
+          required: false
+          description: Especifica el estado con el cual se quiere que se filtre, puede especificarse varios estados separados por coma(,)
+          schema:
+            type: string
+            example: SUCCESS,CANCELLED
+        - name: type
+          in: query
+          required: false
+          description: Especifica el tipo con el cual se quiere que se filtre, puede especificarse varios estados separados por coma(,)
+          schema:
+            type: string
+            example: PAYOUT
+      responses:
+        '200':
+          description: Listado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetOperationsResponse'
+        '400':
+          description: Parámetro inválido o fragmento no válido.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                invalidInit:
+                  summary: init inválido
+                  value:
+                    message: "El parámetro 'init' no es válido"
+                invalidEnd:
+                  summary: end inválido
+                  value:
+                    message: "El parámetro 'end' no es válido"
+                InvalidDateInit:
+                  summary: op_date_init inválido
+                  value:
+                    message: "El parámetro 'op_date_init' no es válido"
+                InvalidDateEnd:
+                  summary: op_date_end inválido
+                  value:
+                    message: "El parámetro 'op_date_end' no es válido"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Sin Autorización
+        '500':
+          description: Error inesperado en la ejecución del servicio.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Ocurrió un error inesperado"
+
+  /data/transactions-history:
+    get:
+      tags:
+        - data
+      summary: Listar las operaciones del usuario
+      description: |
+        Este servicio obtiene las transacciones de un usuario autenticado.
+        Los parámetros permiten filtrar por rango de fechas, estado y tipo de operación,
+        así como manejar paginación con `init` y `end`.
+      operationId: getTransactionsHistory
+      parameters:
+        - name: init
+          in: query
+          required: true
+          description: Especifica desde que posición tomara los registros de la colección
+          schema:
+            type: integer
+            example: 0
+        - name: end
+          in: query
+          required: true
+          description: Especifica hasta que posición tomara los registros de la colección
+          schema:
+            type: integer
+            example: 20
+        - name: op_date_init
+          in: query
+          required: true
+          description: Especifica desde que fecha tomara los registros (formato `YYYY-MM-DD HH:mm:ss`)
+          schema:
+            type: string
+            example: 2025-01-01 05:00:00
+        - name: op_date_end
+          in: query
+          required: true
+          description: Especifica hasta que fecha tomara los registros (formato `YYYY-MM-DD HH:mm:ss`)
+          schema:
+            type: string
+            example: 2025-10-12 23:59:59
+      responses:
+        '200':
+          description: Listado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getTransactionsResponse'
+        '400':
+          description: Parámetro inválido.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                invalidInit:
+                  summary: init inválido
+                  value:
+                    message: "El parámetro 'init' no es válido"
+                invalidEnd:
+                  summary: end inválido
+                  value:
+                    message: "El parámetro 'end' no es válido"
+                InvalidDateInit:
+                  summary: op_date_init inválido
+                  value:
+                    message: "El parámetro 'op_date_init' no es válido"
+                InvalidDateEnd:
+                  summary: op_date_end inválido
+                  value:
+                    message: "El parámetro 'op_date_end' no es válido"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Sin Autorización
+        '500':
+          description: Error inesperado en la ejecución del servicio.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Ocurrió un error inesperado"
+
+  /data/save-user-consent:
+    post:
+      tags:
+        - data
+      summary: Guardar los consentmientos del usuario
+      description: Endpoint que permita registrar el consentimiento del usuario, indicando el tipo de consentimiento y si fue aceptado o no, con el fin de almacenar esta información para futuras referencias o cumplimiento de políticas legales.
+      operationId: saveUserConsent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                consent:
+                  type: string
+                  example: 'TERMS'
+                  description: Código del fragmento donde aceptara las condiciones
+                agree:
+                  type: boolean
+                  example: 'true'
+                  description: Flag que indica si da su consentimiento
+      responses:
+        "200":
+          description: Valid Session successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    example: "saveUserConsent"
+                    description: Tipo de evento o acción ejecutada
+                  company:
+                    type: string
+                    example: ""
+                    description: Identificador de la compañía
+                  event:
+                    type: string
+                    example: "saveUserConsent"
+                    description: Nombre del evento asociado
+                  ip:
+                    type: string
+                    example: "35.86.204.3"
+                    description: Dirección IP desde donde se ejecutó la consulta
+                  result:
+                    type: string
+                    example: "OK"
+                    description: Estado de la operación
+        "400":
+          description: Invalid or missing data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                missingParameters:
+                  summary: Parámetros faltantes
+                  value:
+                    message: "Completar los campos obligatorios"
+                invalidConsent:
+                  summary: Código de consentimiento inválido
+                  value:
+                    message: "El parámetro 'consent' no es válido"
+                invalidagree:
+                  summary: Agree inválido
+                  value:
+                    message: "El parámetro 'agree' no es válido"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Sin Autorización
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Ocurrió un error inesperado
+  
+  /data/delete-user-payment-account:
+    post:
+      tags:
+        - data
+      summary: Eliminar cuenta de pago del usuario
+      description: Endpoint que permita eliminar una cuenta de pago del usuario.
+      operationId: deleteUserPaymentAccount
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                payment_account:
+                  type: object
+                  example: '{payment_account: {payment_account: 20}}'
+                  description: Objeto para el id de la cuenta de pago
+                  properties:
+                    payment_account:
+                      type: number
+                      example: '20'
+                      description: id de la cuenta de pago
+      responses:
+        "200":
+          description: Valid Session successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    example: "saveUserConsent"
+                    description: Tipo de evento o acción ejecutada
+                  company:
+                    type: string
+                    example: ""
+                    description: Identificador de la compañía
+                  event:
+                    type: string
+                    example: "saveUserConsent"
+                    description: Nombre del evento asociado
+                  ip:
+                    type: string
+                    example: "35.86.204.3"
+                    description: Dirección IP desde donde se ejecutó la consulta
+                  result:
+                    type: string
+                    example: "OK"
+                    description: Estado de la operación
+        "400":
+          description: Invalid or missing data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                missingParameters:
+                  summary: Parámetros faltantes
+                  value:
+                    message: "Completar los campos obligatorios"
+                invalidPaymentAccount:
+                  summary: Cuenta de pago inválida
+                  value:
+                    message: "El parámetro 'payment_account' no es válido"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Sin Autorización
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Ocurrió un error inesperado
+
+  /contents/get-web-fragment:
+    get:
+      tags:
+        - contents
+      summary: Obtener contenido HTML
+      description: >
+        Servició que devuelve un contenido HTML para el contenido web, siempre y cuando el valor de la sección indicada exista.
+      operationId: getWebFragment
+      parameters:
+        - name: fragment
+          in: query
+          required: true
+          description: Identificador del fragmento de contenido.
+          schema:
+            type: string
+            example: TERMINOS_Y_CONDICIONES_APUESTAS
+      responses:
+        '200':
+          description: Fragmento recuperado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetFragmentResponse'
+        '400':
+          description: Parámetro inválido o fragmento no válido.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "El parámetro 'fragment' es obligatorio"
+        '500':
+          description: Error inesperado en la ejecución del servicio.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Ocurrió un error inesperado"
+
+  /contents/machine-by-name:
+    get:
+      tags:
+        - contents
+      summary: Obtener detalles del juego
+      description: >
+        Servició que devuelve información adicional de un juego mediante su nombre
+      operationId: getMachineByName
+      parameters:
+        - name: provider
+          in: query
+          required: true
+          description: Nombre del Proveedor.
+          schema:
+            type: string
+            example: playtech
+        - name: name
+          in: query
+          required: true
+          description: Nombre del juego
+          schema:
+            type: string
+            example: Lobby new and hot
+      responses:
+        '200':
+          description: Fragmento recuperado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetMachineByNameResponse'
+        '400':
+          description: Invalid or missing data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                missingParameters:
+                  summary: Parámetros faltantes
+                  value:
+                    message: "Completar los campos obligatorios"
+                invalidProvider:
+                  summary: proveedor inválido
+                  value:
+                    message: "El parámetro 'provider' no es válido"
+                invalidName:
+                  summary: nombre inválido
+                  value:
+                    message: "El parámetro 'name' no es válido"
+        '401':
+          description: Token inválido o no proporcionado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Unauthorized"
+        '404':
+          description: La máquina no existe.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "La máquina no existe"
+        '500':
+          description: Error inesperado en la ejecución del servicio.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Ocurrió un error inesperado"
+
+  /contents/providers:
+    get:
+      tags:
+        - contents
+      summary: Listar los proveedores
+      description: >
+        Servició que devuelve una colección de proveedores
+      operationId: getProviders
+      responses:
+        '200':
+          description: Fragmento recuperado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getProvidersResponse'
+        '500':
+          description: Error inesperado en la ejecución del servicio.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Ocurrió un error inesperado"
+
+  /contents/countries:
+    get:
+      tags:
+        - contents
+      summary: Obtener los paises
+      description: >
+        Servició que devuelve un listado con los paises
+      operationId: getCountries
+      responses:
+        '200':
+          description: Listado recuperado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getCountriesResponse'
+        '500':
+          description: Error inesperado en la ejecución del servicio.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Ocurrió un error inesperado"
+
+  /contents/states:
+    get:
+      tags:
+        - contents
+      summary: Obtener los departamentos del Perú
+      description: >
+        Servició que devuelve un listado con los departamentos de Perú
+      operationId: getStates
+      responses:
+        '200':
+          description: Listado recuperado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getStatesResponse'
+        '500':
+          description: Error inesperado en la ejecución del servicio.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Ocurrió un error inesperado"
+  /contents/get-deposit-lobby:
+    get:
+      tags:
+        - contents
+      summary: Listar los tipos de métodos de pago
+      description: >
+        Servició que devuelve un listado con los diversos métodos de pago para realizar un deposito
+      operationId: getDepositLobby
+      responses:
+        '200':
+          description: Listado recuperado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/depositLobbyResponse'
+        '401':
+          description: Token inválido o no proporcionado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Unauthorized"
+        '500':
+          description: Error inesperado en la ejecución del servicio.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Ocurrió un error inesperado"
+
+  /auth/national-id-available:
+    post:
+      tags:
+        - auth
+      summary: Validar que el Documento se encuentre disponible
+      description: Servicio que válida que el DNI se encuentre disponible y no este vinculado a algún usuario ya registrado.
+      operationId: nationalIDAvailable
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                document:
+                  type: string
+                  example: '70568325'
+                  description: número de documento válido (8 dígitos)
+      responses:
+        "200":
+          description: Valid Session successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    example: "nationalIDAvailable"
+                    description: Tipo de evento o acción ejecutada
+                  company:
+                    type: string
+                    example: "ACP"
+                    description: Identificador de la compañía
+                  event:
+                    type: string
+                    example: "nationalIDAvailable"
+                    description: Nombre del evento asociado
+                  ip:
+                    type: string
+                    example: "35.86.204.3"
+                    description: Dirección IP desde donde se ejecutó la consulta
+                  result:
+                    type: string
+                    example: "OK"
+                    description: Estado de la operación
+                  available:
+                    type: string
+                    enum: ["true", "false"]
+                    example: "true"
+                    description: Indica si el documento está disponible
+        "400":
+          description: Invalid or missing data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                missingParameters:
+                  summary: Parámetros faltantes
+                  value:
+                    message: "Completar los campos obligatorios"
+                invalidRefreshToken:
+                  summary: Documento inválido
+                  value:
+                    message: "El parámetro 'documento' no es válido"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Ocurrió un error inesperado
+
+  /auth/email-available:
+    post:
+      tags:
+        - auth
+      summary: Validar que el correo electrónico se encuentre disponible
+      description: Servicio que válida que el correo electrónico se encuentre disponible y no este vinculado a algún usuario ya registrado.
+      operationId: emailAvailable
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: 'giovanny.herrera_1127@hotmail.com'
+                  description: correo electrónico con un formato válido
+      responses:
+        "200":
+          description: Valid Session successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    example: "emailAvailable"
+                    description: Tipo de evento o acción ejecutada
+                  company:
+                    type: string
+                    example: "ACP"
+                    description: Identificador de la compañía
+                  event:
+                    type: string
+                    example: "emailAvailable"
+                    description: Nombre del evento asociado
+                  ip:
+                    type: string
+                    example: "35.86.204.3"
+                    description: Dirección IP desde donde se ejecutó la consulta
+                  result:
+                    type: string
+                    example: "OK"
+                    description: Estado de la operación
+                  available:
+                    type: string
+                    enum: ["true", "false"]
+                    example: "true"
+                    description: Indica si el documento está disponible
+        "400":
+          description: Invalid or missing data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                missingParameters:
+                  summary: Parámetros faltantes
+                  value:
+                    message: "Completar los campos obligatorios"
+                invalidRefreshToken:
+                  summary: Email inválido
+                  value:
+                    message: "El parámetro 'email' no es válido"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Ocurrió un error inesperado
+
+  /auth/mobile-available:
+    post:
+      tags:
+        - auth
+      summary: Validar que el número de celular se encuentre disponible
+      description: Servicio que válida que el número de celular se encuentre disponible y no este vinculado a algún usuario ya registrado.
+      operationId: mobileAvailable
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: '+51900000779'
+                  description: Número de celular con un formato válido
+      responses:
+        "200":
+          description: Valid Session successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    example: "mobileAvailable"
+                    description: Tipo de evento o acción ejecutada
+                  company:
+                    type: string
+                    example: "ACP"
+                    description: Identificador de la compañía
+                  event:
+                    type: string
+                    example: "mobileAvailable"
+                    description: Nombre del evento asociado
+                  ip:
+                    type: string
+                    example: "35.86.204.3"
+                    description: Dirección IP desde donde se ejecutó la consulta
+                  result:
+                    type: string
+                    example: "OK"
+                    description: Estado de la operación
+                  available:
+                    type: string
+                    enum: ["true", "false"]
+                    example: "true"
+                    description: Indica si el documento está disponible
+        "400":
+          description: Invalid or missing data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                missingParameters:
+                  summary: Parámetros faltantes
+                  value:
+                    message: "Completar los campos obligatorios"
+                invalidRefreshToken:
+                  summary: Celular inválido
+                  value:
+                    message: "El parámetro 'mobile' no es válido"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Ocurrió un error inesperado
+
+  /auth/alias-available:
+    post:
+      tags:
+        - auth
+      summary: Validar que el username se encuentre disponible
+      description: Servicio que válida que el username se encuentre disponible y no este vinculado a algún usuario ya registrado.
+      operationId: aliasAvailable
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                alias:
+                  type: string
+                  example: 'Juanjo12'
+                  description: Username de un usuario
+      responses:
+        "200":
+          description: Valid Session successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    example: "aliasAvailable"
+                    description: Tipo de evento o acción ejecutada
+                  company:
+                    type: string
+                    example: "ACP"
+                    description: Identificador de la compañía
+                  event:
+                    type: string
+                    example: "aliasAvailable"
+                    description: Nombre del evento asociado
+                  ip:
+                    type: string
+                    example: "35.86.204.3"
+                    description: Dirección IP desde donde se ejecutó la consulta
+                  result:
+                    type: string
+                    example: "OK"
+                    description: Estado de la operación
+                  available:
+                    type: string
+                    enum: ["true", "false"]
+                    example: "true"
+                    description: Indica si el documento está disponible
+        "400":
+          description: Invalid or missing data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                missingParameters:
+                  summary: Parámetros faltantes
+                  value:
+                    message: "Completar los campos obligatorios"
+                invalidRefreshToken:
+                  summary: Celular inválido
+                  value:
+                    message: "El parámetro 'alias' no es válido"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Ocurrió un error inesperado
+
+  /casino/provider-info:
+    post:
+      tags:
+        - casino
+      summary: Obtener detalle de un proveedor
+      description: Servicio que devuelve información adicional de un proveedor especifico.
+      operationId: getProviderInfo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                provider:
+                  type: string
+                  example: 'playtech'
+                  description: nombre de un proveedor de juegos.
+      responses:
+        "200":
+          description: Fragmento recuperado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetProviderInfoResponse'
+        "400":
+          description: Invalid or missing data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                missingParameters:
+                  summary: Parámetros faltantes
+                  value:
+                    message: "Completar los campos obligatorios"
+                invalidRefreshToken:
+                  summary: proveedor inválido
+                  value:
+                    message: "El parámetro 'provider' no es válido"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Ocurrió un error inesperado
+
+  /payment/deposit:
+    post:
+      tags:
+        - payment
+      summary: registrar un deposito
+      description: Servicio que registra un deposito.
+      operationId: deposit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                method:
+                  type: string
+                  example: 'MONNET_PEN'
+                  description: Método de deposito.
+                amount:
+                  type: integer
+                  example: 30000
+                  description: Monto de deposito.
+      responses:
+        "200":
+          description: Fragmento recuperado correctamente
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/DepositQRReponse'
+                  - $ref: '#/components/schemas/DepositRedirectWithHashReponse'
+                  - $ref: '#/components/schemas/DepositRedirectReponse'
+        "400":
+          description: Invalid or missing data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                methodInvalid:
+                  summary: Método de pago invalido
+                  value:
+                    message: "Método de pago inválido"
+                missingParameters:
+                  summary: Parámetros faltantes
+                  value:
+                    message: "Completar los campos obligatorios"
+                WithoutPriviligies:
+                  summary: Sin Privilegios
+                  value:
+                    message: "No cuenta con privilegios"
+                limitTransactions:
+                  summary: Limite de transacción
+                  value:
+                    message: "El monto de la transacción no es válido"
+                MethodDisabled:
+                  summary: Método de pago inhabilidado
+                  value:
+                    message: "El método de depósito no está habilitado"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Sin Autorización
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Ocurrió un error inesperado 
+
+  /payment/payout:
+    post:
+      tags:
+        - payout
+      summary: solicitar un retiro
+      description: Servicio que solicita un retiro.
+      operationId: payout
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                method:
+                  type: string
+                  example: 'BANK_PAYOUT_PEN'
+                  description: Método de deposito.
+                amount:
+                  type: integer
+                  example: 30000
+                  description: Monto de deposito.
+                payment_account:
+                  type: integer
+                  example: 162814
+                  description: código de cuenta bancaria.
+      responses:
+        "200":
+          description: Solicitud generado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayoutResponse'
+        "400":
+          description: Invalid or missing data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                methodInvalid:
+                  summary: Método de pago invalido
+                  value:
+                    message: "El método es inválido"
+                missingParameters:
+                  summary: Parámetros faltantes
+                  value:
+                    message: "Completar los campos obligatorios"
+                WithoutPriviligies:
+                  summary: Sin Privilegios
+                  value:
+                    message: "No cuenta con privilegios"
+                limitTransactions:
+                  summary: Limite de transacción
+                  value:
+                    message: "El monto del retiro no es válido"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Sin Autorización
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Ocurrió un error inesperado 
+
+  /providers/playtech/internal/pokerLogin:
+    post:
+      tags:
+        - playtech
+      summary: Servicio que genera un 'username' y 'externalToken' temporal
+      description: Endpoint de tipo login, que se encarga de generar un username y un token externo temporal (externalToken), necesarios para iniciar una sesión de juego en la plataforma de Poker del proveedor Playtech.
+      operationId: pokerLogin
+      responses:
+        "200":
+          description: Valid Session successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    example: "OK"
+                    description: Estado de la operación
+                  playtechUser:
+                    type: string
+                    example: "2.445226"
+                    description: Username temporal del usuario para el proveedor
+                  externalToken:
+                    type: string
+                    example: "2-ACP-b5d17160-a033-4748-b3c8-987fa9fa6b1a"
+                    description: Token temporal para poder authenticarse
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Sin Autorización
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Ocurrió un error inesperado
+
+  /providers/playtech/endpoint/authenticate:
+    post:
+      tags:
+        - playtech
+      summary: Servicio que genera un 'Token' para el uso del juego de poker
+      description: Endpoint authenticate, que se encarga de generar datos de sesión para el juego de Poker ligado con el proveedor Playtech.
+      operationId: authenticate
+      responses:
+        "200":
+          description: Valid Session successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  requestId:
+                    type: string
+                    example: "e9ccd456-4c6a-47b3-922f-66a5e5e18518"
+                    description: Identificador del request
+                  countryCode:
+                    type: string
+                    example: "PE"
+                    description: Código de País del usuario
+                  currencyCode:
+                    type: string
+                    example: "PEN"
+                    description: Código del tipo de moneda de la cuenta del usuario
+                  permanentExternalToken:
+                    type: string
+                    example: "2-ACP-ps-45dfcac1-9bca-4628-8b5d-07818cfc257d"
+                    description: Token permanente para navegar por el lobby del proveedor
+                  username:
+                    type: string
+                    example: "2.445226"
+                    description: Nombre de usuario temporal dentro del lobby del proveedor
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Sin Autorización
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Ocurrió un error inesperado
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Auth:
+      required:
+        - username
+        - password
+      type: object
+      properties:
+        username:
+          type: string
+          example: Testprueba90
+        password:
+          type: string
+          example: Testprueba90
+    UserDetailsResponse:
+      type: object
+      properties:
+        type:
+          type: string
+          example: userDetails
+        company:
+          type: string
+          example: ACP
+        event:
+          type: string
+          example: userDetails
+        ip:
+          type: string
+          format: ipv4
+          example: 52.42.214.77
+        result:
+          type: string
+          example: OK
+        user:
+          $ref: "#/components/schemas/User"
+    User:
+      type: object
+      properties:
+        db:
+          type: integer
+          example: 2
+        alias:
+          type: string
+          example: xZoon
+        affiliate:
+          type: string
+          nullable: true
+        user:
+          type: integer
+          example: 410109
+        email:
+          type: string
+          format: email
+          example: yer3_ver@hotmail.com
+        firstName:
+          type: string
+          example: Yerko Airton
+        lastName:
+          type: string
+          example: Vera
+        birthday:
+          type: string
+          format: date
+          example: 1997-02-21
+        gender:
+          type: string
+          enum: [MALE, FEMALE]
+          example: MALE
+        country:
+          type: string
+          example: PE
+        address:
+          type: string
+          example: Jiron capac yupanqui 1593
+        state:
+          type: string
+          example: "15"
+        stateName:
+          type: string
+          example: Lima
+        province:
+          type: string
+          example: "1501"
+        provinceName:
+          type: string
+          example: Lima
+        city:
+          type: string
+          example: "150116"
+        cityName:
+          type: string
+          example: Lince
+        middleName:
+          type: string
+          example: Lezama
+        mobile:
+          type: string
+          example: 51982318638
+        regulatory_status:
+          type: string
+          example: ABIERTO
+        currency:
+          type: string
+          example: PEN
+        company:
+          type: string
+          example: ACP
+        otp:
+          type: string
+          nullable: true
+        lastLogin:
+          type: string
+          format: date-time
+          example: 2025-08-05 18:56:00
+        national_id:
+          type: string
+          example: 70744833
+        national_id_type:
+          type: string
+          example: DNI
+        nationality:
+          type: string
+          example: PE
+        website:
+          type: string
+          example: ""
+        verified:
+          type: integer
+          enum: [0, 1]
+          example: 0
+        facebook_id:
+          type: string
+          nullable: true
+        google_id:
+          type: string
+          nullable: true
+        created_date:
+          type: string
+          format: date-time
+          example: 2025-03-25 17:14:46
+        lang:
+          type: string
+          example: es-ES
+        countryName:
+          type: string
+          example: Peru
+        accounts:
+          type: array
+          items:
+            $ref: "#/components/schemas/Account"
+        groups:
+          type: array
+          items:
+            type: integer
+        limits:
+          $ref: "#/components/schemas/Limits"
+        extra_addresses:
+          type: array
+          items: {}
+    Account:
+      type: object
+      properties:
+        db:
+          type: integer
+          example: 2
+        company:
+          type: string
+          example: ACP
+        user:
+          type: integer
+          example: 410109
+        account:
+          type: string
+          example: CASH
+        currency:
+          type: string
+          example: PEN
+        amount:
+          type: number
+          format: float
+          example: 0
+        updated_date:
+          type: string
+          format: date-time
+          example: 2025-03-25 17:14:47.007
+        active:
+          type: integer
+          enum: [0, 1]
+          example: 1
+        machines:
+          type: string
+          nullable: true
+        forbidden_machines:
+          type: string
+          nullable: true
+        status:
+          type: string
+          example: "1"
+        last_call:
+          type: string
+          format: date-time
+          example: 2025-08-05 20:01:33
+    Limits:
+      type: object
+      properties:
+        DAILY_DEPOSIT:
+          type: number
+          example: 200000000
+        WEEKLY_DEPOSIT:
+          type: number
+          example: 200000000
+        MONTHLY_DEPOSIT:
+          type: number
+          example: 200000000
+    UserAccountsResponse:
+      type: object
+      properties:
+        type:
+          type: string
+          example: userAccounts
+        company:
+          type: string
+          example: ""
+        event:
+          type: string
+          example: userAccounts
+        ip:
+          type: string
+          format: ipv4
+          example: 52.13.74.181
+        result:
+          type: string
+          example: OK
+        accounts:
+          type: array
+          items:
+            $ref: "#/components/schemas/AccountDetailReponse"
+
+    AccountDetailReponse:
+      type: object
+      properties:
+        db:
+          type: integer
+          example: 2
+        company:
+          type: string
+          example: ACP
+        user:
+          type: integer
+          example: 410109
+        account:
+          type: string
+          example: CASH
+        currency:
+          type: string
+          example: PEN
+        amount:
+          type: number
+          format: float
+          example: 0
+        updated_date:
+          type: string
+          format: date-time
+          example: 2025-03-25 17:14:47.007
+        active:
+          type: integer
+          enum: [0, 1]
+          example: 1
+        machines:
+          type: string
+          nullable: true
+        forbidden_machines:
+          type: string
+          nullable: true
+        status:
+          type: string
+          example: "1"
+        last_call:
+          type: string
+          format: date-time
+          example: 2025-08-07 13:43:15
+    UserPendingPromotionsResponse:
+      type: object
+      properties:
+        type:
+          type: string
+          example: getUserPendingPromotions
+        company:
+          type: string
+          example: ""
+        event:
+          type: string
+          example: getUserPendingPromotions
+        ip:
+          type: string
+          format: ipv4
+          example: 35.90.143.177
+        result:
+          type: string
+          example: OK
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserPromotion"
+
+    UserPromotion:
+      type: object
+      properties:
+        db:
+          type: integer
+          example: 2
+        user_promotion_id:
+          type: integer
+          example: 628217
+        company:
+          type: string
+          example: ACP
+        user:
+          type: integer
+          example: 410109
+        promotion:
+          $ref: "#/components/schemas/Promotion"
+        created_date:
+          type: string
+          format: date-time
+          example: 2025-08-15 20:35:59.126
+        status:
+          type: string
+          example: PENDING
+        initial_amount:
+          type: number
+          format: float
+          example: 500
+        amount:
+          type: number
+          format: float
+          example: 500
+        provider:
+          type: string
+          example: altenar
+        redeemed_date:
+          type: string
+          nullable: true
+        expiration_date:
+          type: string
+          format: date-time
+          example: 2025-09-01 04:59:59.000
+        activation_date:
+          type: string
+          nullable: true
+        code:
+          type: string
+          nullable: true
+        idempotence:
+          type: string
+          example: 2.410109.1755290158974
+        cancelled_date:
+          type: string
+          nullable: true
+        cancelled_admin:
+          type: string
+          nullable: true
+        last_transaction:
+          type: string
+          nullable: true
+        operation:
+          type: string
+          nullable: true
+        expiration_activation_date:
+          type: string
+          format: date-time
+          example: 2025-08-22 20:35:59
+        currency:
+          type: string
+          nullable: true
+        cancellable:
+          type: boolean
+          example: true
+        type:
+          type: string
+          example: FREE_BET
+
+    Promotion:
+      type: object
+      properties:
+        promotion:
+          type: string
+          example: ADFREEBETTESTF2
+        name:
+          type: string
+          example: TESTCRFB2
+        summary_title:
+          type: string
+          example: UNA APUESTA GRATIS
+        summary_body:
+          type: string
+          description: Texto en formato HTML con condiciones de la promoción
+        summary_image:
+          type: string
+          example: ""
+        expiration_days:
+          type: integer
+          example: 7
+        activation_expiration_days:
+          type: string
+          example: "7"
+        machines:
+          type: array
+          items: {}
+    UserActivePromotionsResponse:
+      type: object
+      properties:
+        type:
+          type: string
+          example: getUserActivePromotions
+        company:
+          type: string
+          example: ""
+        event:
+          type: string
+          example: getUserActivePromotions
+        ip:
+          type: string
+          format: ipv4
+          example: 44.248.170.255
+        result:
+          type: string
+          example: OK
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserActivePromotion"
+
+    UserActivePromotion:
+      type: object
+      properties:
+        db:
+          type: integer
+          example: 2
+        user_promotion_id:
+          type: integer
+          example: 583374
+        company:
+          type: string
+          example: ACP
+        user:
+          type: integer
+          example: 410109
+        promotion:
+          $ref: "#/components/schemas/ActivePromotion"
+        created_date:
+          type: string
+          format: date-time
+          example: 2025-07-31 23:03:23.960
+        status:
+          type: string
+          example: NOTIFIED
+        initial_amount:
+          type: number
+          example: 20
+        amount:
+          type: number
+          example: 20
+        provider:
+          type: string
+          example: pragmatic
+        redeemed_date:
+          type: string
+          nullable: true
+        expiration_date:
+          type: string
+          format: date-time
+          example: 2025-08-23 16:16:30.000
+        activation_date:
+          type: string
+          format: date-time
+          example: 2025-08-08 16:16:30.000
+        code:
+          type: string
+          nullable: true
+        idempotence:
+          type: string
+          example: "1754003002012"
+        cancelled_date:
+          type: string
+          nullable: true
+        cancelled_admin:
+          type: string
+          nullable: true
+        last_transaction:
+          type: string
+          nullable: true
+        operation:
+          type: string
+          nullable: true
+        expiration_activation_date:
+          type: string
+          format: date-time
+          example: 2025-08-30 23:03:23
+        currency:
+          type: string
+          nullable: true
+        cancellable:
+          type: boolean
+          example: true
+        type:
+          type: string
+          example: FREE_SPIN
+
+    ActivePromotion:
+      type: object
+      properties:
+        promotion:
+          type: string
+          example: FSREC20D20PEN25F1
+        name:
+          type: string
+          example: Free Spins de regalo
+        summary_title:
+          type: string
+          example: ""
+        summary_body:
+          type: string
+          description: Texto en formato HTML con condiciones de la promoción
+        summary_image:
+          type: string
+          example: ""
+        currency:
+          type: string
+          example: PEN
+        max_redeem:
+          type: number
+          example: 4000
+        expiration_days:
+          type: string
+          example: "15"
+        activation_expiration_days:
+          type: integer
+          example: 30
+        machines:
+          type: array
+          items:
+            $ref: "#/components/schemas/Machine"
+
+    Machine:
+      type: object
+      properties:
+        machine:
+          type: integer
+          example: 4001472
+        name:
+          type: string
+          example: 5 Lions Gold
+        web_name:
+          type: string
+          nullable: true
+        provider:
+          type: string
+          example: pragmatic
+        sub_provider:
+          type: string
+          example: pragmatic
+        external_id:
+          type: string
+          example: vs243lionsgold
+        type:
+          type: string
+          example: Slots
+        external_launcher_id:
+          type: string
+          nullable: true
+        is_live:
+          type: integer
+          enum: [0, 1]
+          example: 0
+        allow_freespins:
+          type: integer
+          enum: [0, 1]
+          example: 1
+        tags:
+          type: string
+          nullable: true
+        status:
+          type: string
+          example: ENABLED
+        index:
+          type: integer
+          example: 22
+    
+    ClaimCodePromotionResponse:
+      type: object
+      properties:
+        type:
+          type: string
+          example: claimCodePromotion
+        company:
+          type: string
+          example: ""
+        event:
+          type: string
+          example: claimCodePromotion
+        ip:
+          type: string
+          description: Dirección IP del usuario
+          example: 2001:1388:a44:bd3d:e877:fca7:3e07:bf2f
+        result:
+          type: string
+          enum: [OK, ERROR]
+          example: OK
+        user_promotion:
+          type: object
+          properties:
+            db:
+              type: integer
+              example: 2
+            user_promotion_id:
+              type: integer
+              example: 754602
+            company:
+              type: string
+              example: ACP
+            user:
+              type: integer
+              example: 410109
+            promotion:
+              type: string
+              example: ADTEST5PENF3
+            created_date:
+              type: string
+              format: date-time
+              example: 2025-09-02 17:43:14.672
+            status:
+              type: string
+              enum: [PENDING, ACTIVE, CANCELLED, EXPIRED]
+              example: PENDING
+            wr:
+              type: number
+              example: 0
+            initial_wr:
+              type: number
+              example: 0
+            initial_amount:
+              type: number
+              example: 500
+            amount:
+              type: number
+              example: 500
+            account:
+              type: string
+              example: BETTING-BONUS
+            provider:
+              type: string
+              example: altenar
+            external_id:
+              type: string
+              nullable: true
+              example: null
+            priority:
+              type: integer
+              example: 0
+            redeemed_date:
+              type: string
+              nullable: true
+              example: null
+            expiration_date:
+              type: string
+              format: date-time
+              example: 2025-10-01 04:59:59.000
+            activation_date:
+              type: string
+              nullable: true
+              example: null
+            comments:
+              type: string
+              example: ""
+            code:
+              type: string
+              example: ADTEST5PENF3###2hxvtp
+            idempotence:
+              type: string
+              nullable: true
+              example: null
+            cancelled_date:
+              type: string
+              nullable: true
+              example: null
+            cancelled_admin:
+              type: string
+              nullable: true
+              example: null
+            last_transaction:
+              type: string
+              nullable: true
+              example: null
+            operation:
+              type: string
+              nullable: true
+              example: null
+            expiration_activation_date:
+              type: string
+              format: date-time
+              example: 2025-09-09 17:43:14
+            currency:
+              type: string
+              nullable: true
+              example: null
+            promotion_name:
+              type: string
+              example: Bono Test
+    
+    UserPersonalPreferencesResponse:
+      type: object
+      properties:
+        type:
+          type: string
+          example: getUserPersonalPreferences
+        company:
+          type: string
+          example: ""
+        event:
+          type: string
+          example: getUserPersonalPreferences
+        ip:
+          type: string
+          description: Dirección IP del cliente
+          example: 34.220.83.181
+        result:
+          type: string
+          enum: [OK, ERROR]
+          example: OK
+        preferences:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserPreference'
+    UserPreference:
+      type: object
+      properties:
+        db:
+          type: integer
+          example: 2
+        user:
+          type: integer
+          example: 445226
+        company:
+          type: string
+          example: ACP
+        category:
+          type: string
+          description: Categoría de preferencia del usuario
+          example: GUSTOS
+        subcategory:
+          type: string
+          description: Subcategoría de preferencia
+          example: ENTRETENIMIENTO
+        preference:
+          type: string
+          description: Valor de la preferencia del usuario
+          example: FUTBOL
+
+    UsersPersonalPreferencesResponse:
+      type: object
+      properties:
+        type:
+          type: string
+          example: getUsersPersonalPreferences
+        company:
+          type: string
+          example: ""
+        event:
+          type: string
+          example: getUsersPersonalPreferences
+        ip:
+          type: string
+          description: Dirección IP del cliente
+          example: 52.26.44.45
+        result:
+          type: string
+          enum: [OK, ERROR]
+          example: OK
+        preferences:
+          type: object
+          description: >
+            Diccionario de categorías, cada clave representa una categoría (ej. DEPORTES, GUSTOS, INTERESES).
+          additionalProperties:
+            $ref: '#/components/schemas/PreferenceCategory'
+      example:
+        type: getUsersPersonalPreferences
+        company: ""
+        event: getUsersPersonalPreferences
+        ip: 52.26.44.45
+        result: OK
+        preferences:
+          DEPORTES:
+            name: Deportes
+            subcategories:
+              DEPORTES:
+                name: Deportes
+                preferences:
+                  - preference: BASEBALL
+                    name: BaseBall
+                  - preference: BASKET
+                    name: Basket
+                  - preference: E-SPORTS
+                    name: E-sports
+                  - preference: FUTBOL
+                    name: Fútbol
+                  - preference: FUTBOL_AMERICANO
+                    name: Fútbol Americano
+                  - preference: MMA
+                    name: MMA
+                  - preference: TENNIS
+                    name: Tennis
+          GUSTOS:
+            name: Gustos
+            subcategories:
+              ENTRETENIMIENTO:
+                name: Entretenimiento
+                preferences:
+                  - preference: CINE
+                    name: Cine
+                  - preference: CONCIERTOS
+                    name: Conciertos
+                  - preference: FUTBOL
+                    name: Fútbol
+                  - preference: TEATRO
+                    name: Teatro
+                  - preference: VIAJES
+                    name: Viajes
+              GASTRONOMIA:
+                name: Gastronomía
+                preferences:
+                  - preference: CHINA
+                    name: China
+                  - preference: CRIOLLA
+                    name: Criolla
+                  - preference: ITALIANA
+                    name: Italiana
+                  - preference: MARINA
+                    name: Marina
+                  - preference: POLLOS_PARRILLAS
+                    name: Pollos y parrillas
+              PRODUCTOS:
+                name: Productos
+                preferences:
+                  - preference: DECOHOGAR
+                    name: Decohogar
+                  - preference: DEPORTES
+                    name: Deportes
+                  - preference: ELECTRODOMESTICOS
+                    name: Electrodomésticos
+                  - preference: MODA_BELLEZA
+                    name: Moda y belleza
+                  - preference: NIÑOS
+                    name: Niños
+                  - preference: TECNOLOGIA
+                    name: Tecnología
+          INTERESES:
+            name: Intereses
+            subcategories:
+              MAQUINAS:
+                name: Máquinas
+                preferences:
+                  - preference: ANIMALES
+                    name: Animales
+                  - preference: CLASICAS
+                    name: Clásicas
+                  - preference: COMPRA_ATRACCIONES
+                    name: Compra atracciones
+                  - preference: FANTASIA
+                    name: Fantasía
+                  - preference: FRUTAS
+                    name: Frutas
+                  - preference: HISTORIA
+                    name: Historia
+                  - preference: JEWERLY
+                    name: Jewerly
+                  - preference: MITOLOGIA
+                    name: Mitología
+                  - preference: PROGRESIVAS
+                    name: Progresivas
+              MESAS:
+                name: Mesas
+                preferences:
+                  - preference: BACCARAT
+                    name: Baccarat
+                  - preference: BLACKJACK
+                    name: Black jack
+                  - preference: POKER
+                    name: Póker
+                  - preference: RULETA
+                    name: Ruleta
+                  - preference: SICBO
+                    name: Sic Bo
+    PreferenceCategory:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Nombre de la categoría
+          example: Deportes
+        subcategories:
+          type: object
+          description: >
+            Diccionario de subcategorías dentro de la categoría.
+          additionalProperties:
+            $ref: '#/components/schemas/PreferenceSubcategory'
+    PreferenceSubcategory:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Nombre de la subcategoría
+          example: Entretenimiento
+        preferences:
+          type: array
+          description: Lista de preferencias dentro de la subcategoría
+          items:
+            $ref: '#/components/schemas/PreferenceItem'
+    PreferenceItem:
+      type: object
+      properties:
+        preference:
+          type: string
+          description: Código interno de la preferencia
+          example: FUTBOL
+        name:
+          type: string
+          description: Nombre legible de la preferencia
+          example: Fútbol
+
+    ValidateSessionResponse:
+      type: object
+      properties:
+        type:
+          type: string
+          example: "userDetails"
+        company:
+          type: string
+          example: ""
+        event:
+          type: string
+          example: "userDetails"
+        ip:
+          type: string
+          example: "34.210.67.139"
+        result:
+          type: string
+          example: "OK"
+        user:
+          type: object
+          properties:
+            db:
+              type: integer
+              example: 2
+            alias:
+              type: string
+              example: "giovanny110"
+            affiliate:
+              type: string
+              nullable: true
+              example: null
+            user:
+              type: integer
+              example: 445226
+            email:
+              type: string
+              example: "giovanny_1127@hotmail.com"
+            firstName:
+              type: string
+              example: "Giovanny"
+            lastName:
+              type: string
+              example: "Herrera"
+            birthday:
+              type: string
+              format: date
+              example: "2000-11-27"
+            gender:
+              type: string
+              example: "UNDEFINED"
+            country:
+              type: string
+              example: "PE"
+            address:
+              type: string
+              example: "AV. Pedro Miotta 357"
+            state:
+              type: string
+              example: "15"
+            stateName:
+              type: string
+              example: "Lima"
+            province:
+              type: string
+              example: "1501"
+            provinceName:
+              type: string
+              example: "Lima"
+            city:
+              type: string
+              example: "150133"
+            cityName:
+              type: string
+              example: "San Juan de Miraflores"
+            middleName:
+              type: string
+              example: "Apolaya"
+            mobile:
+              type: string
+              example: "51929233921"
+            regulatory_status:
+              type: string
+              example: "ABIERTO"
+            currency:
+              type: string
+              example: "PEN"
+            company:
+              type: string
+              example: "ACP"
+            otp:
+              type: string
+              nullable: true
+              example: null
+            lastLogin:
+              type: string
+              format: date-time
+              example: "2025-09-19 14:57:21"
+            national_id:
+              type: string
+              example: "70568325"
+            national_id_type:
+              type: string
+              example: "DNI"
+            nationality:
+              type: string
+              example: "PE"
+            website:
+              type: string
+              example: ""
+            verified:
+              type: integer
+              example: 0
+            created_date:
+              type: string
+              format: date-time
+              example: "2025-06-24 14:38:08"
+            lang:
+              type: string
+              example: "es-ES"
+            countryName:
+              type: string
+              example: "Peru"
+    
+    GetFragmentResponse:
+      type: object
+      properties:
+        type:
+          type: string
+          example: getFragment
+        company:
+          type: string
+          example: ACP
+        event:
+          type: string
+          example: getFragment
+        ip:
+          type: string
+          description: Dirección IP de la petición
+          example: 34.211.89.227
+        result:
+          type: string
+          example: OK
+        data:
+          type: string
+          description: Contenido HTML del fragmento
+          example: |
+            <div class="grid-container ad-t-y-c-container">
+              <div class="grid-col">
+                <center>
+                  <h1>Reglas de Apuestas Deportivas</h1>
+                </center>
+                <div class="titulobarra">
+                  <h3 class="titulo_barra_pagina_principal">Atlantic City</h3>
+                  <h3 class="titulo_barra_pagina_principal">Casino &amp; Sport</h3>
+                </div>
+                <p>&nbsp;</p>
+                <h2>Reglas Generales</h2>
+                <p>Apuesta si el número total de goles marcados en el partido será par o impar.</p>
+              </div>
+            </div>
+            <p><b>[v1.1 - 01/2025]</b></p>
+        name:
+          type: string
+          description: Nombre del fragmento solicitado
+          example: TERMINOS Y CONDICIONES APUESTAS
+        images:
+          type: string
+          nullable: true
+          description: Campo reservado para imágenes asociadas al fragmento
+          example: null
+
+    getCountriesResponse:
+      type: object
+      properties:
+        type:
+          type: string
+          example: getCountry
+        company:
+          type: string
+          example: ACP
+        event:
+          type: string
+          example: getCountry
+        ip:
+          type: string
+          example: 54.218.121.4
+        result:
+          type: string
+          example: OK
+        countries:
+          type: array
+          description: Lista de países disponibles.
+          items:
+            type: object
+            properties:
+              country:
+                type: string
+                description: Código ISO del país (2 letras).
+                example: AD
+              name:
+                type: string
+                description: Nombre completo del país.
+                example: Andorra
+
+    getStatesResponse:
+      type: object
+      properties:
+        type:
+          type: string
+          example: getStates
+        company:
+          type: string
+          example: ""
+        event:
+          type: string
+          example: getStates
+        ip:
+          type: string
+          example: 54.218.121.4
+        result:
+          type: string
+          example: OK
+        countries:
+          type: array
+          description: Lista de departamentos disponibles.
+          items:
+            type: object
+            properties:
+              state:
+                type: string
+                description: Código del departamento (2 digitos).
+                example: 10
+              name:
+                type: string
+                description: Nombre del departamento.
+                example: Huánuco
+
+    GetMachineByNameResponse:
+      type: object
+      properties:
+        type:
+          type: string
+          example: "getMachineByName"
+          description: Tipo de evento o acción ejecutada
+        company:
+          type: string
+          example: "ACP"
+          description: Identificador de la compañía
+        event:
+          type: string
+          example: "getMachineByName"
+          description: Nombre del evento asociado
+        ip:
+          type: string
+          example: "18.246.213.76"
+          description: Dirección IP desde donde se ejecutó la consulta
+        result:
+          type: string
+          example: "OK"
+          description: Estado de la operación
+        machine:
+          type: object
+          description: Información de la máquina solicitada
+          properties:
+            machine:
+              type: integer
+              example: 5001355
+              description: Identificador único de la máquina
+            name:
+              type: string
+              example: "Lobby new and hot"
+              description: Nombre de la máquina
+            web_name:
+              type: string
+              example: "Lobby new and hot"
+              description: Nombre mostrado en la web
+            provider:
+              type: string
+              example: "playtech"
+              description: Proveedor principal de la máquina
+            sub_provider:
+              type: string
+              example: "playtech"
+              description: Subproveedor o distribuidor asociado
+            external_id:
+              type: string
+              example: "abwl;newhot"
+              description: Identificador externo de la máquina
+            type:
+              type: string
+              example: "Live"
+              description: Tipo de máquina
+            external_launcher_id:
+              type: string
+              nullable: true
+              example: null
+              description: ID externo del launcher, si aplica
+        favourite:
+          type: boolean
+          example: false
+          description: Indica si la máquina está marcada como favorita
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Usuario o clave incorrecta"
+    GetProviderInfoResponse:
+      type: object
+      properties:
+        type:
+          type: string
+          example: "getProviderInfo"
+          description: Tipo de evento o acción ejecutada
+        company:
+          type: string
+          example: "ACP"
+          description: Identificador de la compañía
+        event:
+          type: string
+          example: "getProviderInfo"
+          description: Nombre del evento asociado
+        ip:
+          type: string
+          example: "35.86.17.235"
+          description: Dirección IP desde donde se ejecutó la consulta
+        result:
+          type: string
+          example: "OK"
+          description: Estado de la operación
+        providerInfo:
+          type: object
+          description: Información del proveedor
+          properties:
+            name:
+              type: string
+              example: "Playtech"
+              description: Nombre del proveedor
+            opener:
+              type: string
+              format: uri
+              example: "https://api.casinoatlanticcity.com/api/casino/opener"
+              description: URL del opener del proveedor
+        session:
+          type: string
+          example: "2-5a90211f9d7a4c0ff1f0cee389f1948602071cd0857b829550704dabfab1fce2e8baf2dc404e2a874ade22881daaebbf6a7e4d02c9e4f817729cd3a6"
+          description: Identificador único de la sesión generada
+
+    getProvidersResponse:
+      type: object
+      properties:
+        type:
+          type: string
+          example: getProviders
+        company:
+          type: string
+          example: ACP
+        event:
+          type: string
+          example: getProviders
+        ip:
+          type: string
+          format: ipv4
+          example: 44.249.151.47
+        result:
+          type: string
+          example: OK
+        providers:
+          type: array
+          items:
+            type: object
+            properties:
+              provider:
+                type: string
+                example: 1x2gaming
+              name:
+                type: string
+                example: 1x2 Gaming
+    
+    GetOperationsResponse:
+      type: object
+      properties:
+        type:
+          type: string
+          example: "getOperations"
+        company:
+          type: string
+          example: ""
+        event:
+          type: string
+          example: "getOperations"
+        ip:
+          type: string
+          format: ipv4
+          example: "44.252.41.36"
+        result:
+          type: string
+          example: "OK"
+        total:
+          type: integer
+          example: 398
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              db:
+                type: integer
+                example: 2
+              company:
+                type: string
+                example: "ACP"
+              operation:
+                type: integer
+                example: 2661828192
+              user:
+                type: integer
+                example: 376006
+              currency:
+                type: string
+                example: "PEN"
+              method:
+                type: string
+                nullable: true
+                example: "BANK_PAYOUT_PEN"
+              method_account:
+                type: string
+                nullable: true
+                example: null
+              operation_date:
+                type: string
+                format: date-time
+                example: "2025-09-18 15:13:19.778"
+              type:
+                type: string
+                example: "MANUAL"
+              status:
+                type: string
+                example: "SUCCESS"
+              provider:
+                type: string
+                nullable: true
+                example: null
+              machine:
+                type: string
+                nullable: true
+                example: null
+              shop:
+                type: string
+                nullable: true
+                example: null
+              terminal:
+                type: string
+                nullable: true
+                example: null
+              payment_account:
+                type: integer
+                nullable: true
+                example: 133476
+              updated_date:
+                type: string
+                format: date-time
+                example: "2025-09-18 15:13:19.778"
+              amount:
+                type: number
+                format: double
+                example: -3946
+              previous_amount:
+                type: number
+                format: double
+                example: 13946
+              account:
+                type: string
+                example: "CASH"
+              method_name:
+                type: string
+                nullable: true
+                example: "Transferencia bancaria PEN"
+
+    getTransactionsResponse:
+      type: object
+      properties:
+        type:
+          type: string
+          example: getTransactions
+        company:
+          type: string
+          example: ""
+        event:
+          type: string
+          example: getTransactions
+        ip:
+          type: string
+          example: 34.212.156.144
+        result:
+          type: string
+          example: OK
+        total:
+          type: integer
+          example: 130
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              db:
+                type: integer
+                example: 2
+              company:
+                type: string
+                example: ACP
+              operation:
+                type: integer
+                example: 2408357581
+              user:
+                type: integer
+                example: 376006
+              amount:
+                type: number
+                format: double
+                example: 3000
+              currency:
+                type: string
+                example: PEN
+              method:
+                type: string
+                example: KASHIO_PEN
+              method_account:
+                type: string
+                nullable: true
+                example: null
+              operation_date:
+                type: string
+                format: date-time
+                example: "2025-05-19 22:05:01.000"
+              type:
+                type: string
+                enum: [DEPOSIT, PAYOUT]
+                example: DEPOSIT
+              status:
+                type: string
+                enum: [SUCCESS, CANCELLED, PROCESSED, DENIED, NEW]
+                example: SUCCESS
+              ip:
+                type: string
+                example: 162.158.79.32
+              useragent:
+                type: string
+                example: Mozilla/5.0 (iPhone; CPU iPhone OS 17_6_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Mobile/15E148 Safari/604.1
+              extra:
+                type: string
+                nullable: true
+                example: |
+                  Transaction status: invoice.paid
+              shop:
+                type: string
+                nullable: true
+                example: null
+              terminal:
+                type: string
+                nullable: true
+                example: null
+              payment_account:
+                type: integer
+                nullable: true
+                example: 133476
+              updated_date:
+                type: string
+                format: date-time
+                example: "2025-05-19 22:06:28.000"
+              comments:
+                type: string
+                nullable: true
+                example: null
+              reject_reason:
+                type: string
+                nullable: true
+                example: "Denegado por Rollover  TYC 13.5 - *3"
+              method_name:
+                type: string
+                example: Kashio PEN
+
+    depositLobbyResponse:
+      properties:
+        type:
+          type: string
+          example: depositLobby
+        company:
+          type: string
+          example: ACP
+        event:
+          type: string
+          example: depositLobby
+        ip:
+          type: string
+          example: 35.91.114.69
+        result:
+          type: string
+          example: OK
+        methods:
+          type: array
+          description: Lista de métodos de depósito disponibles en el lobby.
+          items:
+            type: object
+            properties:
+              method:
+                type: string
+                description: Código interno del método de depósito.
+                example: LIGO_QR
+              name:
+                type: string
+                description: Nombre del método de depósito mostrado al usuario.
+                example: Ligo Deposit QR
+              show_order:
+                type: integer
+                description: Orden en que se debe mostrar el método en la interfaz.
+                example: 0
+              cms:
+                type: object
+                description: Contenido dinámico asociado al método (texto, títulos, imágenes, etc).
+                properties:
+                  summary_title:
+                    type: string
+                    description: Título resumen del método (puede contener JSON o texto plano).
+                    example: '{"message":"Nuevo","color":"linear-gradient(260.75deg, #16A500 50%, #43C331 100%)","textColor":"#ffffff"}'
+                  summary_body:
+                    type: string
+                    description: Cuerpo HTML del resumen.
+                    example: "<h2><strong>COLOR</strong></h2><p>#b09304</p>"
+                  summary_image:
+                    type: string
+                    description: URL o contenido de la imagen de resumen.
+                    example: ""
+                  title:
+                    type: string
+                    description: Información adicional o JSON con montos sugeridos.
+                    example: '{"Amounts":[30,100,300]}'
+                  body:
+                    type: string
+                    description: Texto HTML principal o información adicional.
+                    example: ""
+                  image:
+                    type: string
+                    description: URL de imagen principal (si aplica).
+                    example: ""
+              limits:
+                type: object
+                description: Límites mínimos y máximos de depósito.
+                properties:
+                  min:
+                    type: string
+                    description: Monto mínimo permitido (en centavos o unidades base).
+                    example: "3000"
+                  max:
+                    type: string
+                    description: Monto máximo permitido (en centavos o unidades base).
+                    example: "5000000"
+              depositURL:
+                type: string
+                nullable: true
+                description: URL de redirección al proveedor de pagos (si aplica).
+                example: https://api.casinoatlanticcity.com/api/providers/niubizdesacopladotokenizacion/showPaymentWays
+
+    DepositQRReponse:
+      type: object
+      properties:
+        event:
+          type: string
+          example: "deposit"
+          description: Nombre del evento asociado
+        ip:
+          type: string
+          example: "35.86.17.235"
+          description: Dirección IP desde donde se ejecutó la consulta
+        result:
+          type: string
+          example: "OK"
+          description: Estado de la operación
+        data:
+          type: object
+          properties:
+            service:
+              type: string
+              example: "LigoQRService"
+            company:
+              type: string
+              example: "ACP"
+            newWindow:
+              type: boolean
+              example: false
+            event:
+              type: string
+              example: "deposit"
+            description:
+              type: string
+              example: "Atlantic City - 20 soles"
+            image:
+              type: string
+              format: byte
+              description: |
+                Imagen en base64 con prefijo MIME.
+                Ejemplo:
+                data:image/png;base64,iVBORw0K...
+              example: "data:image/png;base64,iVBORw0KGgoAAAANS..."
+
+    DepositRedirectWithHashReponse:
+      type: object
+      properties:
+        event:
+          type: string
+          example: "deposit"
+          description: Nombre del evento asociado
+        ip:
+          type: string
+          example: "35.86.17.235"
+          description: Dirección IP desde donde se ejecutó la consulta
+        result:
+          type: string
+          example: "OK"
+          description: Estado de la operación
+        data:
+          type: object
+          properties:
+            amount:
+              type: number
+              example: 20
+            hash:
+              type: string
+              example: "30e1280eb20a8bdcd248f266a2bc55217f4e52de949fbf68b8c89f83e44360556082d0ca944675fdbcbb97e357e2e37d7e8cf96b5db6f46f5609e4189c2b08dc"
+            newWindow:
+              type: boolean
+              example: false
+              description: parametro que indica si se abrira una nueva ventana
+            redirectionURL:
+              type: string
+              example: "https://payment.tupayonline.com/v1/checkout/eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiIxMjgwMjUyMzMw"
+              description: url del contenido web que se inyectara en el iframe
+
+    DepositRedirectReponse:
+      type: object
+      properties:
+        event:
+          type: string
+          example: "deposit"
+          description: Nombre del evento asociado
+        ip:
+          type: string
+          example: "35.86.17.235"
+          description: Dirección IP desde donde se ejecutó la consulta
+        result:
+          type: string
+          example: "OK"
+          description: Estado de la operación
+        data:
+          type: object
+          properties:
+            newWindow:
+              type: boolean
+              example: false
+              description: parametro que indica si se abrira una nueva ventana
+            redirectionURL:
+              type: string
+              example: "https://payment.tupayonline.com/v1/checkout/eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiIxMjgwMjUyMzMw"
+              description: url del contenido web que se inyectara en el iframe
+
+    PayoutResponse:
+        type: object
+        properties:
+          company:
+            type: string
+            example: "ACP"
+          event:
+            type: string
+            example: "payout"
+          ip:
+            type: string
+            example: "162.158.97.208"
+          result:
+            type: string
+            example: "OK"
+          method:
+            type: string
+            example: "BANK_PAYOUT_PEN"
+          amount:
+            type: string
+            example: "6000"
+          user:
+            type: string
+            description: >
+              Objeto JSON serializado como string.
+              Contiene la información completa del usuario, incluyendo datos personales,
+              cuentas, grupos y límites.
+            example: >
+              {"db":2,"alias":"xZoon","affiliate":null,"user":410109,"email":"yer3_ver@hotmail.com",
+              "firstName":"Yerko Airton","lastName":"Vera","birthday":"1997-02-21","gender":"MALE",
+              "country":"PE","address":"Calle de las mesones 109, San juan","state":"12",
+              "stateName":"Junín","province":"1206","provinceName":"Satipo ","city":"120605",
+              "cityName":"Pampa Hermosa","middleName":"Lezama","mobile":"51982318638",
+              "regulatory_status":"ABIERTO","currency":"PEN","company":"ACP","otp":null,
+              "lastLogin":"2025-12-06 04:32:55","national_id":"70744833","national_id_type":"DNI",
+              "nationality":"PE","website":"","verified":1,"created_date":"2025-03-25 17:14:46",
+              "lang":"es-ES","countryName":"Peru",
+              "accounts":[{"db":2,"company":"ACP","user":410109,"account":"BETTING-BONUS",
+              "currency":"PEN","amount":1000},{"db":2,"company":"ACP","user":410109,"account":"CASH",
+              "currency":"PEN","amount":10481}],
+              "groups":[3,5,10],"limits":{"DAILY_DEPOSIT":10000}}
+          operation:
+            type: integer
+            example: 2841061840

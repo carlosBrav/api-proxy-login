@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Prueba CORS</title>
+</head>
+
+<body>
+  <h1>Test CORS con API Gateway + Lambda</h1>
+  <button id="sendRequest">Enviar solicitud</button>
+
+  <pre id="responseBox"></pre>
+
+  <script>
+    const apiUrl = "https://wf056ldo4d.execute-api.us-west-2.amazonaws.com/dev/login";
+
+    document.getElementById("sendRequest").addEventListener("click", async () => {
+      try {
+        const response = await fetch(apiUrl, {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+             "username": "giovanny_1127@hotmail.com",
+             "password": "Giovanny1127"
+          })
+        });
+
+        const text = await response.text();
+        document.getElementById("responseBox").textContent = `Status: ${response.status}\n\n${text}`;
+      } catch (err) {
+        document.getElementById("responseBox").textContent = `Error: ${err.message}`;
+      }
+    });
+  </script>
+</body>
+
+</html>

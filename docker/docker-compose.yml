@@ -1,19 +1,32 @@
-version: '3.8'
-
 services:
+  # 1. El Emulador de AWS (Floci) para Persistencia y Estructura (Cognito, DynamoDB, ElastiCache)
   aws-emulator:
     image: floci/floci:latest
-    container_name: aws_local_emulator
+    container_name: acity_aws_emulator
     ports:
-      - "4566:4566"        # Puerto unificado para APIs de AWS
-    volumes:
-      # Crítico en Mac para que Floci pueda crear contenedores hijos (ECS/Lambda/Redis)
-      - /var/run/docker.sock:/var/run/docker.sock 
-      - floci_data:/root/.floci
+      - "4566:4566"  # Puerto unificado AWS local
     environment:
-      - PERSISTENCE=1      # Guarda el estado de DynamoDB/S3 al apagar el contenedor
+      - SERVICES=dynamodb,cognito,elasticache
       - DEFAULT_REGION=us-east-1
-    restart: unless-stopped
+      - PERSISTENCE=1
+    volumes:
+      - floci_data:/root/.floci
+
+  # 2. Capa de Simulación de API Gateway NATIVA (Cero dependencias externas, Ultra estable)
+  infra-auth-mock:
+    image: node:20-alpine
+    container_name: infra_auth_mock
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./mock:/app/mock
+    working_dir: /app
+    environment:
+      - PORT=5001
+      - WS_TOKEN_EXPIRES_IN=3600
+    command: node mock/server.js
+    depends_on:
+      - aws-emulator
 
 volumes:
   floci_data:

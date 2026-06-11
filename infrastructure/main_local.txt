@@ -1,0 +1,506 @@
+
+##################################
+####### PERMISOS DE IAM ##########
+##################################
+
+#Se crea un role iam para los lambda
+module "iam_role" {
+  source         = "./modules/iam/role"
+  role_name      = "roleiam-${local.sufix}-allow-lambda"
+  policy_version = var.policy_version
+  service        = "lambda.amazonaws.com"
+}
+
+module "iam_rpa_basic_execution_lambda" {
+  source     = "./modules/iam/role_policy_attach"
+  role_name  = module.iam_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+# Se asigna la politica al role
+module "iam_rpa_lambda_verify_session" {
+  source     = "./modules/iam/role_policy_attach"
+  role_name  = module.iam_role.name
+  policy_arn = module.iam_policy_invoke_lambda.arn
+}
+
+
+# Se crea una politica para invocar la funcion
+module "iam_policy_invoke_lambda" {
+  source         = "./modules/iam/policy"
+  policy_name    = "policyiam-${local.sufix}-invoke-lambda"
+  policy_version = var.policy_version
+  resource_arns = [
+    # module.lambda_fn_crypto_playtech.arn,
+    module.lambda_fn_crypto_altenar.arn
+  ]
+  actions = ["lambda:InvokeFunction"]
+}
+
+############################
+###### CREAR VPC ###########
+############################
+
+module "vpc" {
+  source             = "./modules/vpc"
+  region             = var.tags.region
+  sg_vpc_endpoint_id = module.sg_redis_lambdas.sg_vpc_endpoint_id
+  vpc_id             = ""
+  # vpc_id             = var.vpc_id
+  # subnet_ids         = [var.subnet_private_1_id, var.subnet_private_2_id]
+  sufix = local.sufix
+}
+
+# ##########################################
+# ####### CREAR SECURITY GROUPS ############
+# ##########################################
+
+module "sg_redis_lambdas" {
+  source           = "./modules/security_group"
+  sg_endpoint_name = "sgroup-${local.sufix}-endpoint"
+  sg_lambda_name   = "sgroup-${local.sufix}-lambda"
+  sg_redis_name    = "sgroup-${local.sufix}-redis"
+  # vpc_id           = var.vpc_id
+  # vpc_cidr_block   = "10.0.0.0/16"
+  # sb_private_1_id  = var.subnet_private_1_id
+  # sb_private_2_id  = var.subnet_private_2_id
+  vpc_id          = module.vpc.id
+  vpc_cidr_block  = module.vpc.cidr_block
+  sb_private_1_id = module.vpc.sb_private_1_id
+  sb_private_2_id = module.vpc.sb_private_2_id
+}
+
+########################################
+####### CREAR ELASTIC CACHE REDIS ######
+########################################
+
+module "elastic_cache_redis" {
+  source   = "./modules/elastic_cache"
+  esg_name = "esg-${local.sufix}-redis"
+  ec_name  = "ec-${local.sufix}-redis"
+  # sb_private_1_id = var.subnet_private_1_id
+  # sb_private_2_id = var.subnet_private_2_id
+  sb_private_1_id = module.vpc.sb_private_1_id
+  sb_private_2_id = module.vpc.sb_private_2_id
+  sg_redis_id     = module.sg_redis_lambdas.sg_redis_id
+}
+
+module "iam_rpa_lambda_vpc" {
+  source    = "./modules/iam/role_policy_attach"
+  role_name = module.iam_role.name
+  # role_name  = var.role_name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+}
+
+#################################################
+####### CREAR FUNCIONES LAMBDA COGNITO #########
+#################################################
+
+#Se crea la funcion define_auth_challenge
+module "lambda_fn_define_auth_challenge" {
+  source          = "./modules/lambda/function"
+  lambda_name     = "lambda-${local.sufix}-${local.lambdas_files_name[0]}"
+  function_name   = local.lambdas_files_name[0]
+  runtime         = "python3.12"
+  role_lambda_arn = module.iam_role.arn
+  is_publish      = true
+  timeout         = local.lambda_config.timeout
+  memory_size     = local.lambda_config.memory_size
+  architectures   = local.lambda_config.architectures
+}
+
+#Se crea la funcion create_auth_challenge
+module "lambda_fn_create_auth_challenge" {
+  source          = "./modules/lambda/function"
+  lambda_name     = "lambda-${local.sufix}-${local.lambdas_files_name[1]}"
+  function_name   = local.lambdas_files_name[1]
+  runtime         = "python3.12"
+  role_lambda_arn = module.iam_role.arn
+  is_publish      = true
+  timeout         = local.lambda_config.timeout
+  memory_size     = local.lambda_config.memory_size
+  architectures   = local.lambda_config.architectures
+}
+
+#Se crea la funcion verify_auth_challenge
+module "lambda_fn_verify_auth_challenge" {
+  source          = "./modules/lambda/function"
+  lambda_name     = "lambda-${local.sufix}-${local.lambdas_files_name[2]}"
+  function_name   = local.lambdas_files_name[2]
+  runtime         = "python3.12"
+  role_lambda_arn = module.iam_role.arn
+  # subnet_ids      = [var.subnet_private_1_id, var.subnet_private_2_id]
+  is_publish    = true
+  timeout       = local.lambda_config.timeout
+  memory_size   = local.lambda_config.memory_size
+  architectures = local.lambda_config.architectures
+  subnet_ids    = [module.vpc.sb_private_1_id, module.vpc.sb_private_2_id]
+  scg_redis_id  = [module.sg_redis_lambdas.sg_lambda_id]
+  environments = {
+    CACHE_REDIS_URL  = module.elastic_cache_redis.node_address
+    CACHE_REDIS_PORT = module.elastic_cache_redis.port
+  }
+}
+
+#Se crea la funcion pre_token_generation
+module "lambda_fn_pre_token_generation" {
+  source          = "./modules/lambda/function"
+  lambda_name     = "lambda-${local.sufix}-${local.lambdas_files_name[3]}"
+  function_name   = local.lambdas_files_name[3]
+  runtime         = "python3.12"
+  role_lambda_arn = module.iam_role.arn
+  # subnet_ids      = [var.subnet_private_1_id, var.subnet_private_2_id]
+  is_publish    = true
+  timeout       = local.lambda_config.timeout
+  memory_size   = local.lambda_config.memory_size
+  architectures = local.lambda_config.architectures
+  subnet_ids    = [module.vpc.sb_private_1_id, module.vpc.sb_private_2_id]
+  scg_redis_id  = [module.sg_redis_lambdas.sg_lambda_id]
+  environments = {
+    CACHE_REDIS_URL  = module.elastic_cache_redis.node_address
+    CACHE_REDIS_PORT = module.elastic_cache_redis.port
+  }
+}
+
+############################################################
+####### CREAR FUNCIONES LAMBDA COMPARTIDOS CALIMACO #########
+############################################################
+
+
+#Se crea la funcion getall data 
+module "lambda_fn_get_user_detail" {
+  source          = "./modules/lambda/function"
+  lambda_name     = "lambda-${local.sufix}-${local.lambdas_files_name[4]}"
+  function_name   = local.lambdas_files_name[4]
+  runtime         = "python3.12"
+  role_lambda_arn = module.iam_role.arn
+  is_publish      = true
+  timeout         = local.lambda_config.timeout
+  memory_size     = local.lambda_config.memory_size
+  architectures   = local.lambda_config.architectures
+}
+
+####################################
+####### WARM START LAMBDAS #########
+####################################
+
+# # # Arranque en caliente
+module "lambda_fn_verify_auth_challenge_warm_start" {
+  source                  = "./modules/lambda/alias"
+  lambda_alias            = "lambdaalias-vac-warmstart"
+  lambda_function_name    = module.lambda_fn_verify_auth_challenge.function_name
+  lambda_function_version = module.lambda_fn_verify_auth_challenge.version
+  quantity_provisioned    = 3
+}
+
+module "lambda_lambda_fn_define_auth_challenge_warm_start" {
+  source                  = "./modules/lambda/alias"
+  lambda_alias            = "lambdaalias-dac-warmstart"
+  lambda_function_name    = module.lambda_fn_define_auth_challenge.function_name
+  lambda_function_version = module.lambda_fn_define_auth_challenge.version
+  quantity_provisioned    = 3
+}
+
+module "lambda_lambda_fn_create_auth_challenge_warm_start" {
+  source                  = "./modules/lambda/alias"
+  lambda_alias            = "lambdaalias-cac-warmstart"
+  lambda_function_name    = module.lambda_fn_create_auth_challenge.function_name
+  lambda_function_version = module.lambda_fn_create_auth_challenge.version
+  quantity_provisioned    = 3
+}
+
+module "lambda_lambda_fn_pre_token_generation_warm_start" {
+  source                  = "./modules/lambda/alias"
+  lambda_alias            = "lambdaalias-ptg-warmstart"
+  lambda_function_name    = module.lambda_fn_pre_token_generation.function_name
+  lambda_function_version = module.lambda_fn_pre_token_generation.version
+  quantity_provisioned    = 3
+}
+
+
+# module "lambda_lambda_fn_get_user_detail_warm_start" {
+#   source                  = "./modules/lambda/alias"
+#   lambda_alias            = "lambdaalias-gud-warmstart"
+#   lambda_function_name    = module.lambda_fn_get_user_detail.function_name
+#   lambda_function_version = module.lambda_fn_get_user_detail.version
+#   quantity_provisioned    = 3
+# }
+
+
+########################################
+####### CREAR COGNITO #########
+########################################
+
+#Se crea el user pool y el client y se le pasa los lambda personalizados
+module "cog_custom_user_pool" {
+  source = "./modules/cognito/user_pool"
+  name   = "coguserpool-${local.sufix}-custom-auth"
+  lambda_config = {
+    define_auth_challenge_arn = module.lambda_fn_define_auth_challenge.arn
+    create_auth_challenge_arn = module.lambda_fn_create_auth_challenge.arn
+    verify_auth_challenge_arn = module.lambda_fn_verify_auth_challenge.arn
+    pre_token_generation_arn  = module.lambda_fn_pre_token_generation.arn
+  }
+}
+
+#Se asigna los permisos a cognito personalizado con los challenge 
+module "user_pool_permissions" {
+  source = "./modules/lambda/permission"
+  for_each = {
+    "AllowCognitoInvokeDefineAuth"         = module.lambda_fn_define_auth_challenge.function_name
+    "AllowCognitoInvokeCreateAuth"         = module.lambda_fn_create_auth_challenge.function_name
+    "AllowCognitoInvokeVerifyAuth"         = module.lambda_fn_verify_auth_challenge.function_name
+    "AllowCognitoInvokePreTokenGeneration" = module.lambda_fn_pre_token_generation.function_name
+  }
+  lambda_fn_name = each.value
+  statement_id   = each.key
+  source_arn     = module.cog_custom_user_pool.arn
+  action         = "lambda:InvokeFunction"
+  principal      = "cognito-idp.us-east-1.amazonaws.com"
+}
+
+
+
+####################################################
+####### CONFIGURACION DE SERVICIOS ALTENAR #########
+####################################################
+
+module "cog_app_client_altenar" {
+  source       = "./modules/cognito/user_pool_client"
+  name         = "cogappclient-${local.sufix}-altenar"
+  user_pool_id = module.cog_custom_user_pool.id
+}
+
+#Se crea la funcion SignIn 
+module "lambda_fn_sign_in_altenar" {
+  source          = "./modules/lambda/function"
+  lambda_name     = "lambda-${local.sufix}-${local.lambdas_files_name[5]}-altenar"
+  function_name   = local.lambdas_files_name[5]
+  runtime         = "python3.12"
+  role_lambda_arn = module.iam_role.arn
+  is_publish      = true
+  timeout         = local.lambda_config.timeout
+  memory_size     = local.lambda_config.memory_size
+  architectures   = local.lambda_config.architectures
+  environments = {
+    COGNITO_URL  = "https://cognito-idp.${var.region}.amazonaws.com"
+    FN_CRYPTO    = module.lambda_fn_crypto_altenar.function_name
+    USER_POOL_ID = module.cog_custom_user_pool.id
+
+    CLIENT_ID     = module.cog_app_client_altenar.id
+    CLIENT_SECRET = module.cog_app_client_altenar.secret
+  }
+}
+
+#Se crea la funcion Crypto 
+module "lambda_fn_crypto_altenar" {
+  source          = "./modules/lambda/function"
+  lambda_name     = "lambda-${local.sufix}-${local.lambdas_files_name[6]}-altenar"
+  function_name   = local.lambdas_files_name[6]
+  runtime         = "nodejs18.x"
+  role_lambda_arn = module.iam_role.arn
+  is_publish      = false
+  memory_size     = 512
+  timeout         = 30
+  architectures   = local.lambda_config.architectures
+  environments = {
+    CRYPTO_SECRET_KEY = "PruebaACity2025***"
+  }
+}
+
+module "apigateway_api_rest_altenar" {
+  source                  = "./modules/apigateway/rest_api"
+  name                    = "apigateway-${local.sufix}-api-altenar"
+  gateway_authorizer_name = "authgateway-${local.sufix}-authorizer"
+  cognito_userpool_arn    = module.cog_custom_user_pool.arn
+}
+
+module "apigateway_integrations_get_user_detail_altenar" {
+  source                = "./modules/apigateway/integration"
+  environment           = var.tags.environment
+  api_id                = module.apigateway_api_rest_altenar.id
+  api_execution_arn     = module.apigateway_api_rest_altenar.execution_arn
+  api_root_resource_id  = module.apigateway_api_rest_altenar.root_resource_id
+  authorizer_id         = module.apigateway_api_rest_altenar.authorizer_id
+  lambda_fn_name        = module.lambda_fn_get_user_detail.function_name
+  lambda_fn_invoke_arn  = module.lambda_fn_get_user_detail.invoke_arn
+  method                = "GET"
+  path_resource         = "get-user-detail"
+  authorization         = "COGNITO_USER_POOLS"
+  enable_cors           = true
+  client_name           = "altenar"
+  has_client_name_in_fn = false
+}
+
+module "apigateway_integrations_sign_in_altenar" {
+  source               = "./modules/apigateway/integration"
+  environment          = var.tags.environment
+  api_id               = module.apigateway_api_rest_altenar.id
+  api_execution_arn    = module.apigateway_api_rest_altenar.execution_arn
+  api_root_resource_id = module.apigateway_api_rest_altenar.root_resource_id
+  lambda_fn_name       = module.lambda_fn_sign_in_altenar.function_name
+  lambda_fn_invoke_arn = module.lambda_fn_sign_in_altenar.invoke_arn
+  authorizer_id        = module.apigateway_api_rest_altenar.authorizer_id
+  method               = "POST"
+  path_resource        = "sign-in"
+  authorization        = "NONE"
+  enable_cors          = true
+}
+
+module "apigateway_deployment_altenar" {
+  depends_on = [
+    module.apigateway_integrations_get_user_detail_altenar,
+    module.apigateway_integrations_sign_in_altenar,
+  ]
+  source      = "./modules/apigateway/deployment"
+  api_id      = module.apigateway_api_rest_altenar.id
+  environment = var.tags.environment
+  redeployment_resources = [
+    module.apigateway_integrations_get_user_detail_altenar.integration_id,
+    module.apigateway_integrations_get_user_detail_altenar.method_id,
+    module.apigateway_integrations_get_user_detail_altenar.resource_id,
+
+    module.apigateway_integrations_sign_in_altenar.integration_id,
+    module.apigateway_integrations_sign_in_altenar.method_id,
+    module.apigateway_integrations_sign_in_altenar.resource_id,
+  ]
+}
+
+
+module "api_waf_altenar" {
+  source            = "./modules/waf"
+  api_execution_arn = "arn:aws:apigateway:${var.region}::/restapis/${module.apigateway_api_rest_altenar.id}/stages/${module.apigateway_deployment_altenar.stage_name}"
+  waf_name          = "waf-${local.sufix}-security-altenar"
+  client_name       = "altenar"
+}
+
+
+####################################################
+####### CONFIGURACION DE SERVICIOS PLAYTECH #########
+####################################################
+
+
+# module "cog_app_client_playtech" {
+#   source       = "./modules/cognito/user_pool_client"
+#   name         = "cogappclient-${local.sufix}-playtech"
+#   user_pool_id = module.cog_custom_user_pool.id
+# }
+
+# #Se crea la funcion SignIn 
+# module "lambda_fn_sign_in_playtech" {
+#   source          = "./modules/lambda/function"
+#   lambda_name     = "lambda-${local.sufix}-${local.lambdas_files_name[5]}-playtech"
+#   function_name   = local.lambdas_files_name[5]
+#   runtime         = "python3.12"
+#   role_lambda_arn = module.iam_role.arn
+#   is_publish      = true
+#   timeout         = local.lambda_config.timeout
+#   memory_size     = local.lambda_config.memory_size
+#   architectures   = local.lambda_config.architectures
+#   environments = {
+#     COGNITO_URL  = "https://cognito-idp.${var.region}.amazonaws.com"
+#     FN_CRYPTO    = module.lambda_fn_crypto_playtech.function_name
+#     USER_POOL_ID = module.cog_custom_user_pool.id
+
+#     CLIENT_ID     = module.cog_app_client_playtech.id
+#     CLIENT_SECRET = module.cog_app_client_playtech.secret
+#   }
+# }
+
+# #Se crea la funcion Crypto 
+# module "lambda_fn_crypto_playtech" {
+#   source          = "./modules/lambda/function"
+#   lambda_name     = "lambda-${local.sufix}-${local.lambdas_files_name[6]}-playtech"
+#   function_name   = local.lambdas_files_name[6]
+#   runtime         = "nodejs18.x"
+#   role_lambda_arn = module.iam_role.arn
+#   is_publish      = false
+#   memory_size     = 512
+#   timeout         = 30
+#   architectures   = local.lambda_config.architectures
+#   environments = {
+#     CRYPTO_SECRET_KEY = "PruebaACity2025$++"
+#   }
+# }
+
+# module "apigateway_api_rest_playtech" {
+#   source                  = "./modules/apigateway/rest_api"
+#   name                    = "apigateway-${local.sufix}-api-playtech"
+#   gateway_authorizer_name = "authgateway-${local.sufix}-authorizer"
+#   cognito_userpool_arn    = module.cog_custom_user_pool.arn
+# }
+
+# module "apigateway_integrations_get_user_detail_playtech" {
+#   source                = "./modules/apigateway/integration"
+#   environment           = var.tags.environment
+#   api_id                = module.apigateway_api_rest_playtech.id
+#   api_execution_arn     = module.apigateway_api_rest_playtech.execution_arn
+#   api_root_resource_id  = module.apigateway_api_rest_playtech.root_resource_id
+#   authorizer_id         = module.apigateway_api_rest_playtech.authorizer_id
+#   lambda_fn_name        = module.lambda_fn_get_user_detail.function_name
+#   lambda_fn_invoke_arn  = module.lambda_fn_get_user_detail.invoke_arn
+#   method                = "GET"
+#   path_resource         = "get-user-detail"
+#   authorization         = "COGNITO_USER_POOLS"
+#   enable_cors           = true
+#   client_name           = "playtech"
+#   has_client_name_in_fn = false
+# }
+
+# module "apigateway_integrations_sign_in_playtech" {
+#   source               = "./modules/apigateway/integration"
+#   environment          = var.tags.environment
+#   api_id               = module.apigateway_api_rest_playtech.id
+#   api_execution_arn    = module.apigateway_api_rest_playtech.execution_arn
+#   api_root_resource_id = module.apigateway_api_rest_playtech.root_resource_id
+#   lambda_fn_name       = module.lambda_fn_sign_in_playtech.function_name
+#   lambda_fn_invoke_arn = module.lambda_fn_sign_in_playtech.invoke_arn
+#   authorizer_id        = module.apigateway_api_rest_playtech.authorizer_id
+#   method               = "POST"
+#   path_resource        = "sign-in"
+#   authorization        = "NONE"
+#   enable_cors          = true
+# }
+
+# module "apigateway_deployment_playtech" {
+#   depends_on = [
+#     module.apigateway_integrations_get_user_detail_playtech,
+#     module.apigateway_integrations_sign_in_playtech,
+#   ]
+#   source      = "./modules/apigateway/deployment"
+#   api_id      = module.apigateway_api_rest_playtech.id
+#   environment = var.tags.environment
+#   redeployment_resources = [
+#     module.apigateway_integrations_get_user_detail_playtech.integration_id,
+#     module.apigateway_integrations_get_user_detail_playtech.method_id,
+#     module.apigateway_integrations_get_user_detail_playtech.resource_id,
+
+#     module.apigateway_integrations_sign_in_playtech.integration_id,
+#     module.apigateway_integrations_sign_in_playtech.method_id,
+#     module.apigateway_integrations_sign_in_playtech.resource_id,
+#   ]
+# }
+
+# module "api_waf_playtech" {
+#   source            = "./modules/waf"
+#   waf_name          = "waf-${local.sufix}-security-playtech"
+#   api_execution_arn = "arn:aws:apigateway:${var.region}::/restapis/${module.apigateway_api_rest_playtech.id}/stages/${module.apigateway_deployment_playtech.stage_name}"
+#   client_name       = "playtech"
+# }
+
+########################################
+####### CREAR SERVICIO CLOUDWATCH ######
+########################################
+
+module "cloudwatch_loggings" {
+  for_each = toset([
+    module.lambda_fn_get_user_detail.function_name,
+
+    module.lambda_fn_sign_in_altenar.function_name,
+    module.lambda_fn_crypto_altenar.function_name,
+  ])
+  source         = "./modules/cloudwatch"
+  name           = "/aws/lambda/${each.value}"
+  retention_days = 30
+}
+
