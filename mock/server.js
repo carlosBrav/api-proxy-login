@@ -6,6 +6,14 @@ const PORT = process.env.PORT || 8081;
 const WS_URL = process.env.WS_URL || 'ws://localhost:8081'; 
 const EXPIRES_IN = parseInt(process.env.WS_TOKEN_EXPIRES_IN || '3600', 10);
 
+// Helper para crear Base64Url estricto (alfanumérico + '-' y '_')
+const toBase64Url = (str) => {
+  return Buffer.from(str).toString('base64')
+    .replace(/=/g, '')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_');
+};
+
 const server = http.createServer((req, res) => {
   // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -33,9 +41,9 @@ const server = http.createServer((req, res) => {
         }
       }
 
-      const header = Buffer.from(JSON.stringify({alg: 'HS256', typ: 'JWT'})).toString('base64').replace(/=/g, '');
-      const payload = Buffer.from(JSON.stringify({sub: 'GUEST#' + guestId, type: 'guest', exp: Math.floor(Date.now()/1000) + EXPIRES_IN})).toString('base64').replace(/=/g, '');
-      const signature = crypto.createHmac('sha256', 'local-secret-key').update(header + '.' + payload).digest('base64').replace(/=/g, '');
+      const header = toBase64Url(JSON.stringify({alg: 'HS256', typ: 'JWT'}));
+      const payload = toBase64Url(JSON.stringify({sub: 'GUEST#' + guestId, type: 'guest', exp: Math.floor(Date.now()/1000) + EXPIRES_IN}));
+      const signature = crypto.createHmac('sha256', 'local-secret-key').update(header + '.' + payload).digest('base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
       const wsToken = header + '.' + payload + '.' + signature;
 
       res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -65,9 +73,9 @@ const server = http.createServer((req, res) => {
     
     const mockUserId = '0881e330-d021-7082-4bca-3533c484c4e5';
     
-    const header = Buffer.from(JSON.stringify({alg: 'HS256', typ: 'JWT'})).toString('base64').replace(/=/g, '');
-    const payload = Buffer.from(JSON.stringify({sub: 'USER#' + mockUserId, type: 'user', exp: Math.floor(Date.now()/1000) + EXPIRES_IN})).toString('base64').replace(/=/g, '');
-    const signature = crypto.createHmac('sha256', 'local-secret-key').update(header + '.' + payload).digest('base64').replace(/=/g, '');
+    const header = toBase64Url(JSON.stringify({alg: 'HS256', typ: 'JWT'}));
+    const payload = toBase64Url(JSON.stringify({sub: 'USER#' + mockUserId, type: 'user', exp: Math.floor(Date.now()/1000) + EXPIRES_IN}));
+    const signature = crypto.createHmac('sha256', 'local-secret-key').update(header + '.' + payload).digest('base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
     const wsToken = header + '.' + payload + '.' + signature;
 
     res.writeHead(200, { 'Content-Type': 'application/json' });
