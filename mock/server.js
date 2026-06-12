@@ -42,12 +42,12 @@ const server = http.createServer((req, res) => {
       let guestId = 'us-east-1:local-dummy-uuid';
       if (body) {
         try {
-          if(!parsed.guestId) {
+          const parsed = JSON.parse(body);
+          if(!parsed.guestId.trim() || parsed.guestId.length === 0) {
             res.writeHead(401, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ error: 'Unauthorized: Missing guestId' }));
             return;
           }
-          const parsed = JSON.parse(body);
           if (parsed.guestId) guestId = parsed.guestId;
         } catch (e) {
           console.error('Error parsing body', e);
