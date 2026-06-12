@@ -14,6 +14,14 @@ const toBase64Url = (str) => {
     .replace(/\//g, '_');
 };
 
+function isJwtFormat(token) {
+
+  const jwtRegex =
+    /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/;
+
+  return jwtRegex.test(token);
+}
+
 const server = http.createServer((req, res) => {
   // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -65,7 +73,7 @@ const server = http.createServer((req, res) => {
     }
 
     const token = authHeader.split(' ')[1];
-    if (token.split('.').length !== 3) {
+    if (token.split('.').length !== 3 || !isJwtFormat(token)) {
       res.writeHead(401, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: 'Unauthorized: Invalid JWT format' }));
       return;
