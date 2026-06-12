@@ -43,6 +43,10 @@ const server = http.createServer((req, res) => {
       let guestId = "us-east-1:local-dummy-uuid";
       if (body) {
         try {
+          throw new Error({
+            code: 500,
+            message: "Caido pe ",
+          });
           const parsed = JSON.parse(body);
           if (Object.keys(parsed).length > 0) {
             if (!parsed.guestId) {
@@ -52,7 +56,10 @@ const server = http.createServer((req, res) => {
               );
               return;
             }
-            if (!parsed.guestId.toString().trim() || parsed.guestId.length === 0) {
+            if (
+              !parsed.guestId.toString().trim() ||
+              parsed.guestId.length === 0
+            ) {
               res.writeHead(400, { "Content-Type": "application/json" });
               res.end(
                 JSON.stringify({
@@ -74,6 +81,12 @@ const server = http.createServer((req, res) => {
           }
         } catch (e) {
           console.error("Error parsing body", e);
+          res.writeHead(500, { "Content-Type": "application/json" });
+          res.end(
+            JSON.stringify({
+              error: "Server error exception",
+            }),
+          );
         }
       }
 
@@ -107,49 +120,63 @@ const server = http.createServer((req, res) => {
   }
   // MOCK: POST /ws/session
   else if (req.method === "POST" && req.url === "/ws/session") {
-    const authHeader = req.headers["authorization"];
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      res.writeHead(401, { "Content-Type": "application/json" });
-      res.end(
-        JSON.stringify({ error: "Unauthorized: Missing or invalid token" }),
+    try {
+      throw new Error({
+        code: 500,
+        message: "Caido pe ",
+      });
+      const authHeader = req.headers["authorization"];
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        res.writeHead(401, { "Content-Type": "application/json" });
+        res.end(
+          JSON.stringify({ error: "Unauthorized: Missing or invalid token" }),
+        );
+        return;
+      }
+
+      const token = authHeader.split(" ")[1];
+      if (token.split(".").length !== 3 || !isJwtFormat(token)) {
+        res.writeHead(401, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Unauthorized: Invalid JWT format" }));
+        return;
+      }
+
+      const mockUserId = "0881e330-d021-7082-4bca-3533c484c4e5";
+
+      const header = toBase64Url(JSON.stringify({ alg: "HS256", typ: "JWT" }));
+      const payload = toBase64Url(
+        JSON.stringify({
+          sub: "USER#" + mockUserId,
+          type: "user",
+          exp: Math.floor(Date.now() / 1000) + EXPIRES_IN,
+        }),
       );
-      return;
+      const signature = crypto
+        .createHmac("sha256", "local-secret-key")
+        .update(header + "." + payload)
+        .digest("base64")
+        .replace(/=/g, "")
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_");
+      const wsToken = header + "." + payload + "." + signature;
+
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({
+          wsUrl: WS_URL,
+          wsToken: wsToken,
+          expiresIn: EXPIRES_IN,
+        }),
+      );
+    } catch (e) {
+      console.error("Error parsing body", e);
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({
+          error: "Server error exception",
+        }),
+      );
     }
-
-    const token = authHeader.split(" ")[1];
-    if (token.split(".").length !== 3 || !isJwtFormat(token)) {
-      res.writeHead(401, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: "Unauthorized: Invalid JWT format" }));
-      return;
-    }
-
-    const mockUserId = "0881e330-d021-7082-4bca-3533c484c4e5";
-
-    const header = toBase64Url(JSON.stringify({ alg: "HS256", typ: "JWT" }));
-    const payload = toBase64Url(
-      JSON.stringify({
-        sub: "USER#" + mockUserId,
-        type: "user",
-        exp: Math.floor(Date.now() / 1000) + EXPIRES_IN,
-      }),
-    );
-    const signature = crypto
-      .createHmac("sha256", "local-secret-key")
-      .update(header + "." + payload)
-      .digest("base64")
-      .replace(/=/g, "")
-      .replace(/\+/g, "-")
-      .replace(/\//g, "_");
-    const wsToken = header + "." + payload + "." + signature;
-
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(
-      JSON.stringify({
-        wsUrl: WS_URL,
-        wsToken: wsToken,
-        expiresIn: EXPIRES_IN,
-      }),
-    );
   }
   // MOCK: POST /login
   else if (req.method === "POST" && req.url === "/login") {
