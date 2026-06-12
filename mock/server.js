@@ -43,7 +43,6 @@ const server = http.createServer((req, res) => {
       let guestId = "us-east-1:local-dummy-uuid";
       if (body) {
         try {
-          
           const parsed = JSON.parse(body);
           if (Object.keys(parsed).length > 0) {
             if (!parsed.guestId) {
@@ -75,6 +74,12 @@ const server = http.createServer((req, res) => {
           }
         } catch (e) {
           console.error("Error parsing body", e);
+          res.writeHead(500, { "Content-Type": "application/json" });
+              res.end(
+                JSON.stringify({
+                  error: "Server Error Exception"
+                }),
+              );
         }
       }
 
@@ -108,6 +113,9 @@ const server = http.createServer((req, res) => {
   }
   // MOCK: POST /ws/session
   else if (req.method === "POST" && req.url === "/ws/session") {
+    try {
+          throw new Exception({error: 500, message: 'caido por diego'})
+    
     const authHeader = req.headers["authorization"];
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       res.writeHead(401, { "Content-Type": "application/json" });
@@ -151,6 +159,15 @@ const server = http.createServer((req, res) => {
         expiresIn: EXPIRES_IN,
       }),
     );
+  }catch (e) {
+          console.error("Error parsing body", e);
+          res.writeHead(500, { "Content-Type": "application/json" });
+              res.end(
+                JSON.stringify({
+                  error: "Server Error Exception"
+                }),
+              );
+        }
   }
   // MOCK: POST /login
   else if (req.method === "POST" && req.url === "/login") {
