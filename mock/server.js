@@ -42,6 +42,11 @@ const server = http.createServer((req, res) => {
       let guestId = 'us-east-1:local-dummy-uuid';
       if (body) {
         try {
+          if(!parsed.guestId) {
+            res.writeHead(401, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Unauthorized: Missing guestId' }));
+            return;
+          }
           const parsed = JSON.parse(body);
           if (parsed.guestId) guestId = parsed.guestId;
         } catch (e) {
