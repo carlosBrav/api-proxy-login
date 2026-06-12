@@ -43,12 +43,17 @@ const server = http.createServer((req, res) => {
       if (body) {
         try {
           const parsed = JSON.parse(body);
+          if(!parsed.guestId){
+            res.writeHead(401, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Unauthorized: Missing guestId' }));
+            return;
+          }
           if(!parsed.guestId.trim() || parsed.guestId.length === 0) {
             res.writeHead(401, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ error: 'Unauthorized: Missing or invalid guestId' }));
             return;
           }
-          if(!parsed.trim().includes("us-east-")) {
+          if(!parsed.guestId.trim().includes("us-east-")) {
             res.writeHead(401, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ error: 'Unauthorized: Missing or invalid guestId' }));
             return;
